@@ -1,0 +1,17 @@
+[project]
+name = "isekaitavern"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "discord.py",
+    "dotenv",
+    "PyNaCl",
+    "yt-dlp",
+    "redis",
+    "beanie"
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["PLC0414"]
