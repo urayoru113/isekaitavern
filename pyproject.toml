@@ -10,8 +10,11 @@ dependencies = [
     "PyNaCl",
     "yt-dlp",
     "redis",
-    "beanie"
+    "beanie",
+    "dacite",
+    "pydantic"
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["PLC0414"]
+

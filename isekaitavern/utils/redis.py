@@ -1,23 +1,10 @@
-import redis.asyncio as redis
+import typing
+
+T = typing.TypeVar("T")
 
 
-class RedisManager:
-    __redis: redis.Redis | None = None
-
-    def __init__(self, url: str):
-        self.url = url
-
-    def connect(self):
-        self.__redis = redis.Redis.from_url(self.url)
-
-    @property
-    def redis(self):
-        if self.__redis is None:
-            self.connect()
-        return self.__redis
-
-    async def set(self, key: str, value: str):
-        await self.redis.set(key, value)
-
-    async def get(self, key: str):
-        return await self.redis.get(key)
+def validate_async(value: typing.Any | typing.Awaitable[T]) -> typing.Awaitable[T]:
+    """Extract async value from a redis response."""
+    if not isinstance(value, typing.Awaitable):
+        raise TypeError(f"Expected Awaitable, got {type(value), value}")
+    return value

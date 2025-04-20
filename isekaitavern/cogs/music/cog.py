@@ -1,10 +1,10 @@
 import typing
 
 import discord
-import redis.asyncio as redis
 from discord.ext import commands
 
 from isekaitavern.bot import DiscordBot
+from isekaitavern.services.repository import RedisClient
 from isekaitavern.utils.context_helper import fetch_guild, fetch_member
 
 from .core import GuildClient, VocalGuildChannel
@@ -114,9 +114,16 @@ class MusicCog(commands.Cog, name="music"):
         guild_client = self._get_guild_client(fetch_guild(ctx))
         await guild_client.leave()
 
+    @commands.Cog.listener()
+    async def on_guild_remove(self, ctx: commands.Context) -> None:
+        guild = fetch_guild(ctx)
+        guild_client = self._get_guild_client(guild)
+        await guild_client.clear_playlist()
+        del self.__guild[guild.id]
+
     @typing.override
     async def cog_check(self, ctx: commands.Context) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
-        if not self.bot.redis:
+        if not self.bot.redis_client:
             await ctx.send("Playlist is not available, music commands are disabled")
             return False
 
@@ -126,21 +133,15 @@ class MusicCog(commands.Cog, name="music"):
 
         return True
 
-    @property
-    def redis(self) -> redis.Redis:
-        assert self.bot.redis
-        return self.bot.redis
-
     def _get_guild_client(self, guild: discord.Guild) -> GuildClient:
         if guild.id not in self.__guild:
-            self.__guild[guild.id] = GuildClient(guild, self.redis, self.bot.loop)
+            self.__guild[guild.id] = GuildClient(guild, self.redis_client, self.bot.loop)
         return self.__guild[guild.id]
 
-    @commands.Cog.listener()
-    async def on_guild_remove(self, ctx: commands.Context) -> None:
-        guild = fetch_guild(ctx)
-        await self.redis.delete(f"{guild.id}:playlist")
-        del self.__guild[guild.id]
+    @property
+    def redis_client(self) -> RedisClient:
+        assert self.bot.redis_client, "Redis is not available"
+        return self.bot.redis_client
 
 
 async def setup(bot: DiscordBot) -> None:

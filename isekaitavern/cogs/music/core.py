@@ -1,38 +1,30 @@
 import asyncio
-import dataclasses
+import json
 
 import discord
-import redis.asyncio as redis
 import yt_dlp
 
 from isekaitavern import errno
 from isekaitavern.config.ffmpeg import FFMPEG_OPTIONS
 from isekaitavern.config.youtube import YDL_OPTS
+from isekaitavern.services.repository import RedisClient
 from isekaitavern.utils.logging import logger
-from isekaitavern.utils.tool import B64
+
+from .model import MusicInfo
 
 VocalGuildChannel = discord.VoiceChannel | discord.StageChannel
 
 
-@dataclasses.dataclass
-class MusicInfo:
-    title: str
-    stream_url: str
-    url: str
-    description: str
-
-
 class GuildClient:
-    __expire_time: int = 60 * 60 * 24
     __volume: int = 20
     __current_playing: MusicInfo | None = None
     __ydl: yt_dlp.YoutubeDL = yt_dlp.YoutubeDL(YDL_OPTS)
 
     voice_client: discord.VoiceClient | None = None
 
-    def __init__(self, guild: discord.Guild, redis: redis.Redis, loop: asyncio.AbstractEventLoop):
+    def __init__(self, guild: discord.Guild, redis_client: RedisClient, loop: asyncio.AbstractEventLoop):
         self.guild = guild
-        self.redis = redis
+        self.redis_client = redis_client
         self.loop = loop
 
         self.__playlist_key = f"{guild.id}:playlist"
@@ -110,41 +102,38 @@ class GuildClient:
             await self.voice_client.disconnect()
 
     async def add_to_playlist(self, *urls: str) -> None:
+        logger.info(f"add {urls} to playlist")
         tasks = (
             self.loop.run_in_executor(None, lambda url=url: self.__ydl.extract_info(url, download=False))
             for url in urls
         )
         infos = await asyncio.gather(*tasks)
         for url, info in zip(urls, infos, strict=True):
-            assert info
+            assert info, "Failed to extract info"
             music_info = MusicInfo(
                 url=url,
                 stream_url=info["url"],
                 title=info["title"],
                 description=info["description"],
             )
-            value = B64.encode(**dataclasses.asdict(music_info))
-            await self.redis.rpush(self.__playlist_key, value)
-        await self.redis.expire(self.__playlist_key, self.__expire_time)
+            value = json.dumps(music_info.to_dict())
+            await self.redis_client.rpush(self.__playlist_key, value)
 
     async def pop_from_playlist(self) -> MusicInfo:
         logger.info("Popping from playlist")
-        out = await self.redis.lpop(self.__playlist_key)
-        await self.redis.expire(self.__playlist_key, self.__expire_time)
-        if not out:
+        out = await self.redis_client.lpop(self.__playlist_key)
+        if not isinstance(out, str):
             raise errno.ValueError("Playlist is empty")
-        return MusicInfo(**B64.decode(out))
+        return MusicInfo.from_dict(json.loads(out))
 
     async def get_playlist(self) -> list[MusicInfo]:
-        await self.redis.expire(self.__playlist_key, self.__expire_time)
-        return [MusicInfo(**B64.decode(x)) for x in await self.redis.lrange(self.__playlist_key, 0, -1)]
+        return [MusicInfo.from_dict(json.loads(x)) for x in await self.redis_client.lrange(self.__playlist_key, 0, -1)]
 
     async def clear_playlist(self) -> None:
-        await self.redis.delete(self.__playlist_key)
+        await self.redis_client.redis.delete(self.__playlist_key)
 
     async def get_playlist_length(self) -> int:
-        await self.redis.expire(self.__playlist_key, self.__expire_time)
-        return await self.redis.llen(self.__playlist_key)
+        return await self.redis_client.llen(self.__playlist_key)
 
     @property
     def volume(self) -> int:
