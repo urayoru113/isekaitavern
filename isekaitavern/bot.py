@@ -9,7 +9,7 @@ import redis.asyncio as redis
 from discord.ext import commands
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
-from isekaitavern.config.services import MONGO_URL, REDIS_URL
+from isekaitavern.config.services import MONGO_HOST, REDIS_HOST
 from isekaitavern.errno import TransmittableException
 from isekaitavern.services.repository import RedisClient
 from isekaitavern.utils.logging import logger
@@ -28,8 +28,8 @@ class DiscordBot(commands.Bot):
         )
 
         self._beanie_models_to_init: dict[AsyncIOMotorDatabase, list[type[beanie.Document]]] = defaultdict(list)
-        self.__motor_client = AsyncIOMotorClient(MONGO_URL)
-        self.__redis_client = RedisClient(redis.Redis.from_url(REDIS_URL, decode_responses=True))
+        self.__motor_client = AsyncIOMotorClient(MONGO_HOST)
+        self.__redis_client = RedisClient(redis.Redis.from_url(REDIS_HOST, decode_responses=True))
 
     @typing.override
     async def setup_hook(self):
@@ -55,7 +55,8 @@ class DiscordBot(commands.Bot):
             await asyncio.gather(*beanie_init_tasks)
         except Exception as e:
             logger.critical(f"Connection failed during startup: {e}")
-            raise ConnectionError(f"Connection failed during startup: {e}") from Exception
+
+        await self.tree.sync()
 
     @typing.override
     async def on_command_error(self, ctx: commands.Context, error: discord.DiscordException):
@@ -63,8 +64,9 @@ class DiscordBot(commands.Bot):
             await ctx.send(*error.original.args)
         logger.error(*error.args)
 
-    def _register_beanie_model(self, database: AsyncIOMotorDatabase, model: type[beanie.Document]):
-        self._beanie_models_to_init[database].append(model)
+    def _register_beanie_model(self, database: AsyncIOMotorDatabase, *models: type[beanie.Document]):
+        for model in models:
+            self._beanie_models_to_init[database].append(model)
 
     @property
     def prefix(self) -> str:

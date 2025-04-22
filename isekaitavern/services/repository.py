@@ -1,8 +1,6 @@
-import json
 import typing
 from collections import defaultdict
 
-import beanie
 import redis.asyncio as redis
 from redis.typing import FieldT, ResponseT
 
@@ -71,27 +69,3 @@ class RedisClient:
     @property
     def redis(self) -> redis.Redis:
         return self.__redis
-
-
-# class GuildSettingRepository:
-#    def __init__(self, redis_client: RedisClient):
-#        self.__redis_client = redis_client
-#
-#    async def save_doc(self, *indexes: str, data: beanie.Document) -> None:
-#        await data.save()
-#        await self.redis_client.redis.delete(":".join(indexes))
-#
-#    async def load_doc(self, model_cls: type[TVGuildSettings], guild_id: int) -> TVGuildSettings | None:
-#        key = f"{guild_id}:{model_cls.__name__}"
-#        cached = await self.redis_client.get(key)
-#        assert isinstance(cached, str), f"Expected str, got {type(cached), cached}"
-#        if cached:
-#            return model_cls(**json.loads(cached))
-#        else:
-#            value = await model_cls.find_one(model_cls.guild_id == guild_id)
-#            await self.redis_client.set(key, value, ex=3600)
-#            return value
-#
-#    @property
-#    def redis_client(self) -> RedisClient:
-#        return self.__redis_client
