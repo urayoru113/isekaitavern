@@ -1,5 +1,3 @@
-import typing
+import discord
 
-
-class SupportsStr(typing.Protocol):
-    def __str__(self) -> str: ...
+VocalGuildChannel = discord.VoiceChannel | discord.StageChannel

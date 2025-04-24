@@ -2,6 +2,7 @@ import asyncio
 import os
 import typing
 from collections import defaultdict
+from glob import glob
 
 import beanie
 import discord
@@ -35,12 +36,11 @@ class DiscordBot(commands.Bot):
     async def setup_hook(self):
         logger.info(f"bot prefix:{self.prefix}")
 
-        cogs = []
-        rel_dir = os.path.basename(os.path.dirname(__file__))
-        for cog_dir in os.listdir(os.path.join(rel_dir, "cogs")):
-            folder = os.path.join(rel_dir, "cogs", cog_dir)
-            if os.path.isdir(folder) and not cog_dir.startswith("_"):
-                cogs.append(os.path.join(folder, "cog").replace(os.path.sep, "."))
+        cogs = [
+            file[:-3].replace(os.path.sep, ".")
+            for file in glob("isekaitavern/cogs/**/cog.py", recursive=True)
+            if os.path.isfile(file)
+        ]
         co_cogs = (self.load_extension(cog) for cog in cogs)
         await asyncio.gather(*co_cogs)
         logger.info(f"extensions: {cogs}")

@@ -1,4 +1,3 @@
-import asyncio
 import contextlib
 import typing
 
@@ -14,7 +13,7 @@ from .core import WelcomeFarewell
 from .model import FarewellModel, TVModel, WelcomeModel
 
 
-class WelcomeFarewellCog(commands.Cog, name="welcome_farewell"):
+class WelcomeFarewellCog(commands.Cog, name="guild_settings"):
     def __init__(self, bot: DiscordBot):
         self.bot = bot
         self.bot._register_beanie_model(self.bot.motor_client.GuildSettings, WelcomeModel, FarewellModel)
@@ -28,27 +27,22 @@ class WelcomeFarewellCog(commands.Cog, name="welcome_farewell"):
     async def on_member_leave(self, member: discord.Member) -> None:
         await self._on_event(FarewellModel, member)
 
-    @commands.hybrid_group(
-        help="A group of commands to manage guild settings for welcome and farewell messages.",
-    )
-    async def guildsettings(self, _: commands.Context): ...
+    @commands.hybrid_group()
+    async def welcome(self, _: commands.Context):...
 
-    @guildsettings.command(
-        help="Sets the welcome message for the server. Requires a channel, title, and message.",
-    )
-    async def welcome(self, ctx: commands.Context, channel: discord.TextChannel, title: str, *, msg: str):
+    @commands.hybrid_group()
+    async def farewell(self, _: commands.Context):...
+
+    @welcome.command(name="message")
+    async def welcome_message(self, ctx: commands.Context, channel: discord.TextChannel, title: str, *, msg: str):
         await self._set_msg(WelcomeModel, ctx, channel, title, msg)
 
-    @guildsettings.command(
-        help="Sets the farewell message for the server. Requires a channel, title, and message.",
-    )
-    async def farewell(self, ctx: commands.Context, channel: discord.TextChannel, title: str, *, msg: str):
+    @farewell.command(name="message")
+    async def farewell_message(self, ctx: commands.Context, channel: discord.TextChannel, title: str, *, msg: str):
         await self._set_msg(FarewellModel, ctx, channel, title, msg)
 
-    @guildsettings.command(
-        help="Sets the color for the welcome and farewell embeds. Accepts a color name or hex code.",
-    )
-    async def color(self, ctx: commands.Context, maybe_color: str) -> None:
+    @welcome.command(name="color")
+    async def welcome_color(self, ctx: commands.Context, maybe_color: str) -> None:
         set_by_member = fetch_member(ctx)
         with contextlib.suppress(ValueError):
             maybe_color = Color.from_str(maybe_color.upper()).value
@@ -60,13 +54,9 @@ class WelcomeFarewellCog(commands.Cog, name="welcome_farewell"):
             return
 
         guild = fetch_guild(ctx)
-        welcome_model, farewell_model = await asyncio.gather(
-            self.guild_client.require_model(WelcomeModel, guild.id),
-            self.guild_client.require_model(FarewellModel, guild.id),
-        )
+        welcome_model = await self.guild_client.require_model(WelcomeModel, guild.id)
         welcome_model.color = color
-        farewell_model.color = color
-        await asyncio.gather(welcome_model.save(), farewell_model.save())
+        await welcome_model.save()
         embed = self._get_embed(
             welcome_model,
             member=f"<@{set_by_member.id}>",
@@ -75,19 +65,37 @@ class WelcomeFarewellCog(commands.Cog, name="welcome_farewell"):
         )
         await ctx.reply("Updated color successfully\nmessage:\n", embed=embed)
 
-    @guildsettings.command(
-        help="Sets the thumbnail for the welcome and farewell embeds. Accepts a URL.",
-    )
-    async def thumbnail(self, ctx: commands.Context, url: str = "") -> None:
+    @farewell.command(name="color")
+    async def farewell_color(self, ctx: commands.Context, maybe_color: str) -> None:
+        set_by_member = fetch_member(ctx)
+        with contextlib.suppress(ValueError):
+            maybe_color = Color.from_str(maybe_color.upper()).value
+
+        try:
+            color = discord.Color.from_str(maybe_color).value
+        except ValueError:
+            await ctx.send("Invalid color name or hex code")
+            return
+
+        guild = fetch_guild(ctx)
+        farewell_model = await self.guild_client.require_model(FarewellModel, guild.id)
+        farewell_model.color = color
+        await farewell_model.save()
+        embed = self._get_embed(
+            farewell_model,
+            member=f"<@{set_by_member.id}>",
+            member_icon=set_by_member.display_avatar.url,
+            member_banner=set_by_member.display_banner.url if set_by_member.display_banner else "",
+        )
+        await ctx.reply("Updated color successfully\nmessage:\n", embed=embed)
+
+    @welcome.command(name="thumbnail")
+    async def welcome_thumbnail(self, ctx: commands.Context, url: str = "") -> None:
         guild = fetch_guild(ctx)
         set_by_member = fetch_member(ctx)
-        welcome_model, farewell_model = await asyncio.gather(
-            self.guild_client.require_model(WelcomeModel, guild.id),
-            self.guild_client.require_model(FarewellModel, guild.id),
-        )
+        welcome_model = await self.guild_client.require_model(WelcomeModel, guild.id)
         welcome_model.thumbnail_url = url
-        farewell_model.thumbnail_url = url
-        await asyncio.gather(welcome_model.save(), farewell_model.save())
+        await welcome_model.save()
         embed = self._get_embed(
             welcome_model,
             member=f"<@{set_by_member.id}>",
@@ -96,21 +104,48 @@ class WelcomeFarewellCog(commands.Cog, name="welcome_farewell"):
         )
         await ctx.reply("Updated color successfully\nmessage:\n", embed=embed)
 
-    @guildsettings.command(
+    @farewell.command(name="thumbnail")
+    async def farewell_thumbnail(self, ctx: commands.Context, url: str = "") -> None:
+        guild = fetch_guild(ctx)
+        set_by_member = fetch_member(ctx)
+        farewell_model = await self.guild_client.require_model(FarewellModel, guild.id)
+        farewell_model.thumbnail_url = url
+        await farewell_model.save()
+        embed = self._get_embed(
+            farewell_model,
+            member=f"<@{set_by_member.id}>",
+            member_icon=set_by_member.display_avatar.url,
+            member_banner=set_by_member.display_banner.url if set_by_member.display_banner else "",
+        )
+        await ctx.reply("Updated color successfully\nmessage:\n", embed=embed)
+
+    @welcome.command(name="image")
+    async def welcome_image(self, ctx: commands.Context, url: str = "") -> None:
+        guild = fetch_guild(ctx)
+        set_by_member = fetch_member(ctx)
+        welcome_model = await self.guild_client.require_model(WelcomeModel, guild.id)
+        welcome_model.image_url = url
+        await welcome_model.save()
+        embed = self._get_embed(
+            welcome_model,
+            member=f"<@{set_by_member.id}>",
+            member_icon=set_by_member.display_avatar.url,
+            member_banner=set_by_member.display_banner.url if set_by_member.display_banner else "",
+        )
+        await ctx.reply("Updated color successfully\nmessage:\n", embed=embed)
+
+    @farewell.command(
+        name="image",
         help="Sets the image for the welcome and farewell embeds. Accepts a URL.",
     )
     async def image(self, ctx: commands.Context, url: str = "") -> None:
         guild = fetch_guild(ctx)
         set_by_member = fetch_member(ctx)
-        welcome_model, farewell_model = await asyncio.gather(
-            self.guild_client.require_model(WelcomeModel, guild.id),
-            self.guild_client.require_model(FarewellModel, guild.id),
-        )
-        welcome_model.image_url = url
+        farewell_model = await self.guild_client.require_model(FarewellModel, guild.id)
         farewell_model.image_url = url
-        await asyncio.gather(welcome_model.save(), farewell_model.save())
+        await farewell_model.save()
         embed = self._get_embed(
-            welcome_model,
+            farewell_model,
             member=f"<@{set_by_member.id}>",
             member_icon=set_by_member.display_avatar.url,
             member_banner=set_by_member.display_banner.url if set_by_member.display_banner else "",

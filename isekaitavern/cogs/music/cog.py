@@ -7,17 +7,17 @@ from isekaitavern.bot import DiscordBot
 from isekaitavern.services.repository import RedisClient
 from isekaitavern.utils.context_helper import fetch_guild, fetch_member
 
-from .core import GuildClient, VocalGuildChannel
+from .core import MusicClient, VocalGuildChannel
 
 
 class MusicCog(commands.Cog, name="music"):
     def __init__(self, bot: DiscordBot) -> None:
         self.bot = bot
-        self.__guild: dict[int, GuildClient] = {}
+        self.__guild: dict[int, MusicClient] = {}
 
     @commands.hybrid_command()
     async def voice_status(self, ctx: commands.Context) -> None:
-        guild_client = self._get_guild_client(fetch_guild(ctx))
+        guild_client = self._require_guild_client(fetch_guild(ctx))
         client = guild_client.voice_client
         msg = ""
         if client:
@@ -40,12 +40,12 @@ class MusicCog(commands.Cog, name="music"):
                 return
             channel = author.voice.channel
 
-        guild_client = self._get_guild_client(fetch_guild(ctx))
+        guild_client = self._require_guild_client(fetch_guild(ctx))
         await guild_client.join_channel(channel)
 
     @commands.command()
-    async def play(self, ctx: commands.Context, *urls: str) -> None:
-        guild_client = self._get_guild_client(fetch_guild(ctx))
+    async def play(self, ctx: commands.Context, url: str) -> None:
+        guild_client = self._require_guild_client(fetch_guild(ctx))
 
         if not guild_client.voice_client:
             # Bot is not in a voice channel
@@ -57,36 +57,36 @@ class MusicCog(commands.Cog, name="music"):
             # Bot will join the author's voice channel
             await guild_client.join_channel(author.voice.channel)
 
-        if urls:
-            await guild_client.add_to_playlist(*urls)
+        await guild_client.add_to_playlist(url)
 
         await guild_client.play_music()
 
     @commands.command()
     async def volume(self, ctx: commands.Context, volume: str | None = None) -> None:
-        guild = self._get_guild_client(fetch_guild(ctx))
+        """Set the volume from 0 to 1000."""
+        guild = self._require_guild_client(fetch_guild(ctx))
         if volume:
-            await guild.adjust_volume(volume)
-            await ctx.send(f"Volume set to {guild.volume}%")
+            guild.adjust_volume(volume)
+            await ctx.send(f"Volume set to {guild.volume}")
         else:
-            await ctx.send(f"Volume set to {guild.volume}%")
+            await ctx.send(f"Volume is {guild.volume}/1000")
 
     @commands.command()
     async def skip(self, ctx: commands.Context) -> None:
-        guild_client = self._get_guild_client(fetch_guild(ctx))
-        await guild_client.stop()
-        if await guild_client.get_playlist_length() > 0:
+        guild_client = self._require_guild_client(fetch_guild(ctx))
+        guild_client.stop()
+        if guild_client.get_playlist_length() > 0:
             await guild_client.play_music()
 
     @commands.command()
     async def pause(self, ctx: commands.Context) -> None:
-        guild_client = self._get_guild_client(fetch_guild(ctx))
-        await guild_client.pause()
+        guild_client = self._require_guild_client(fetch_guild(ctx))
+        guild_client.pause()
 
     @commands.command()
     async def playlist(self, ctx: commands.Context) -> None:
-        guild_client = self._get_guild_client(fetch_guild(ctx))
-        playlist = await guild_client.get_playlist()
+        guild_client = self._require_guild_client(fetch_guild(ctx))
+        playlist = guild_client.playlist
         msg = ""
         for i, music in enumerate(playlist):
             msg += f"{i+1}.[{music.title}]({music.url})\n"
@@ -95,9 +95,9 @@ class MusicCog(commands.Cog, name="music"):
         else:
             await ctx.send("Playlist is empty")
 
-    @commands.command()
+    @commands.command(aliases=["np"])
     async def nowplaying(self, ctx: commands.Context) -> None:
-        guild_client = self._get_guild_client(fetch_guild(ctx))
+        guild_client = self._require_guild_client(fetch_guild(ctx))
         if not guild_client.current_playing:
             await ctx.send("No music is currently playing")
             return
@@ -106,19 +106,19 @@ class MusicCog(commands.Cog, name="music"):
 
     @commands.command()
     async def clear(self, ctx: commands.Context) -> None:
-        guild_client = self._get_guild_client(fetch_guild(ctx))
-        await guild_client.clear_playlist()
+        guild_client = self._require_guild_client(fetch_guild(ctx))
+        guild_client.clear_playlist()
 
     @commands.command()
     async def leave(self, ctx: commands.Context) -> None:
-        guild_client = self._get_guild_client(fetch_guild(ctx))
+        guild_client = self._require_guild_client(fetch_guild(ctx))
         await guild_client.leave()
 
     @commands.Cog.listener()
     async def on_guild_remove(self, ctx: commands.Context) -> None:
         guild = fetch_guild(ctx)
-        guild_client = self._get_guild_client(guild)
-        await guild_client.clear_playlist()
+        guild_client = self._require_guild_client(guild)
+        guild_client.stop()
         del self.__guild[guild.id]
 
     @typing.override
@@ -133,9 +133,22 @@ class MusicCog(commands.Cog, name="music"):
 
         return True
 
-    def _get_guild_client(self, guild: discord.Guild) -> GuildClient:
+    @commands.Cog.listener()
+    async def on_voice_state_update(
+        self,
+        member: discord.Member,
+        before: discord.VoiceState,
+        after: discord.VoiceState,
+    ) -> None:
+        if member.id != self.bot.application_id:
+            return
+
+        if before.channel is not None and after.channel is None:
+            del self.__guild[member.guild.id]
+
+    def _require_guild_client(self, guild: discord.Guild) -> MusicClient:
         if guild.id not in self.__guild:
-            self.__guild[guild.id] = GuildClient(guild, self.redis_client, self.bot.loop)
+            self.__guild[guild.id] = MusicClient(guild, self.bot.loop)
         return self.__guild[guild.id]
 
     @property
