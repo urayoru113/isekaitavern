@@ -115,8 +115,7 @@ class MusicCog(commands.Cog, name="music"):
         await guild_client.leave()
 
     @commands.Cog.listener()
-    async def on_guild_remove(self, ctx: commands.Context) -> None:
-        guild = fetch_guild(ctx)
+    async def on_guild_remove(self, guild: discord.Guild) -> None:
         guild_client = self._require_guild_client(guild)
         guild_client.stop()
         del self.__guild[guild.id]
