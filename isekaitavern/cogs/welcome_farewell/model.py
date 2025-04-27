@@ -37,4 +37,4 @@ class FarewellModel(_BasicModel):
         name = "farewell"
 
 
-TVModel = typing.TypeVar("TVModel", WelcomeModel, FarewellModel)
+WelcomeFarewellModel_T = typing.TypeVar("WelcomeFarewellModel_T", WelcomeModel, FarewellModel)

@@ -299,6 +299,7 @@ name = "isekaitavern"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "aiohttp" },
     { name = "beanie" },
     { name = "dacite" },
     { name = "discord-py" },
@@ -311,6 +312,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiohttp" },
     { name = "beanie" },
     { name = "dacite" },
     { name = "discord-py" },

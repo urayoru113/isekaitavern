@@ -5,14 +5,15 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "discord.py",
-    "dotenv",
     "PyNaCl",
-    "yt-dlp",
-    "redis",
+    "aiohttp",
     "beanie",
     "dacite",
-    "pydantic"
+    "discord.py",
+    "dotenv",
+    "pydantic",
+    "redis",
+    "yt-dlp",
 ]
 
 [tool.ruff.lint]

@@ -121,16 +121,11 @@ class MusicCog(commands.Cog, name="music"):
         del self.__guild[guild.id]
 
     @typing.override
-    async def cog_check(self, ctx: commands.Context) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
+    async def cog_check(self, ctx: commands.Context) -> bool:  # type: ignore
         if not self.bot.redis_client:
-            await ctx.send("Playlist is not available, music commands are disabled")
             return False
 
-        if not ctx.guild:
-            await ctx.send("This command can only be used in a server")
-            return False
-
-        return True
+        return bool(ctx.guild)
 
     @commands.Cog.listener()
     async def on_voice_state_update(

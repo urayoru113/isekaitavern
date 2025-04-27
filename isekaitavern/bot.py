@@ -4,6 +4,7 @@ import typing
 from collections import defaultdict
 from glob import glob
 
+import aiohttp
 import beanie
 import discord
 import redis.asyncio as redis
@@ -31,10 +32,13 @@ class DiscordBot(commands.Bot):
         self._beanie_models_to_init: dict[AsyncIOMotorDatabase, list[type[beanie.Document]]] = defaultdict(list)
         self.__motor_client = AsyncIOMotorClient(MONGO_HOST)
         self.__redis_client = RedisClient(redis.Redis.from_url(REDIS_HOST, decode_responses=True))
+        self.__aiohttp_session: aiohttp.ClientSession | None = None
 
     @typing.override
     async def setup_hook(self):
         logger.info(f"bot prefix:{self.prefix}")
+
+        self.__aiohttp_session = aiohttp.ClientSession()
 
         cogs = [
             file[:-3].replace(os.path.sep, ".")
@@ -55,14 +59,19 @@ class DiscordBot(commands.Bot):
             await asyncio.gather(*beanie_init_tasks)
         except Exception as e:
             logger.critical(f"Connection failed during startup: {e}")
-
-        await self.tree.sync()
+            raise ConnectionError(e) from e
 
     @typing.override
     async def on_command_error(self, ctx: commands.Context, error: discord.DiscordException):
         if isinstance(error, commands.CommandInvokeError) and isinstance(error.original, TransmittableException):
             await ctx.send(*error.original.args)
         logger.error(*error.args)
+
+    @typing.override
+    async def close(self):
+        if self.__aiohttp_session:
+            await self.__aiohttp_session.close()
+        await super().close()
 
     def _register_beanie_model(self, database: AsyncIOMotorDatabase, *models: type[beanie.Document]):
         for model in models:
@@ -79,3 +88,8 @@ class DiscordBot(commands.Bot):
     @property
     def motor_client(self) -> AsyncIOMotorClient:
         return self.__motor_client
+
+    @property
+    def aiohttp_session(self) -> aiohttp.ClientSession:
+        assert self.__aiohttp_session, "Session not initialized"
+        return self.__aiohttp_session

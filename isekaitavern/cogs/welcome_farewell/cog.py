@@ -6,18 +6,17 @@ from discord.ext import commands
 
 from isekaitavern.bot import DiscordBot
 from isekaitavern.enums import Color
-from isekaitavern.services.repository import RedisClient
 from isekaitavern.utils.context_helper import fetch_guild, fetch_member
 
 from .core import WelcomeFarewell
-from .model import FarewellModel, TVModel, WelcomeModel
+from .model import FarewellModel, WelcomeFarewellModel_T, WelcomeModel
 
 
 class WelcomeFarewellCog(commands.Cog, name="guild_settings"):
     def __init__(self, bot: DiscordBot):
         self.bot = bot
         self.bot._register_beanie_model(self.bot.motor_client.GuildSettings, WelcomeModel, FarewellModel)
-        self.guild_client = WelcomeFarewell(self.redis_client)
+        self.guild_client = WelcomeFarewell()
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
@@ -65,7 +64,12 @@ class WelcomeFarewellCog(commands.Cog, name="guild_settings"):
     async def farewell_image(self, ctx: commands.Context, url: str = "") -> None:
         await self._set_image(ctx, FarewellModel, url)
 
-    async def _set_color(self, ctx: commands.Context, model_cls: type[TVModel], maybe_color: str) -> None:
+    async def _set_color(
+        self,
+        ctx: commands.Context,
+        model_cls: type[WelcomeFarewellModel_T],
+        maybe_color: str,
+    ) -> None:
         set_by_member = fetch_member(ctx)
         with contextlib.suppress(ValueError):
             maybe_color = Color.from_str(maybe_color.upper()).value
@@ -77,7 +81,7 @@ class WelcomeFarewellCog(commands.Cog, name="guild_settings"):
             return
 
         guild = fetch_guild(ctx)
-        model = await self.guild_client.set_model(
+        model = await self.guild_client.set_welcome_farewell_model(
             model_cls,
             guild.id,
             set_by_member_id=set_by_member.id,
@@ -95,10 +99,15 @@ class WelcomeFarewellCog(commands.Cog, name="guild_settings"):
         reply_content += f"{model_cls.__name__} message:\n"
         await ctx.reply(reply_content, embed=embed)
 
-    async def _set_thumbnail(self, ctx: commands.Context, model_cls: type[TVModel], url: str = "") -> None:
+    async def _set_thumbnail(
+        self,
+        ctx: commands.Context,
+        model_cls: type[WelcomeFarewellModel_T],
+        url: str = "",
+    ) -> None:
         guild = fetch_guild(ctx)
         set_by_member = fetch_member(ctx)
-        model = await self.guild_client.set_model(
+        model = await self.guild_client.set_welcome_farewell_model(
             model_cls,
             guild.id,
             set_by_member_id=set_by_member.id,
@@ -116,10 +125,10 @@ class WelcomeFarewellCog(commands.Cog, name="guild_settings"):
         reply_content += f"{model_cls.__name__} message:\n"
         await ctx.reply(reply_content, embed=embed)
 
-    async def _set_image(self, ctx: commands.Context, model_cls: type[TVModel], url: str = "") -> None:
+    async def _set_image(self, ctx: commands.Context, model_cls: type[WelcomeFarewellModel_T], url: str = "") -> None:
         guild = fetch_guild(ctx)
         set_by_member = fetch_member(ctx)
-        model = await self.guild_client.set_model(
+        model = await self.guild_client.set_welcome_farewell_model(
             model_cls,
             guild.id,
             set_by_member_id=set_by_member.id,
@@ -141,7 +150,7 @@ class WelcomeFarewellCog(commands.Cog, name="guild_settings"):
 
     async def _set_msg(
         self,
-        model_cls: type[TVModel],
+        model_cls: type[WelcomeFarewellModel_T],
         ctx: commands.Context,
         channel: discord.TextChannel,
         title: str,
@@ -149,7 +158,7 @@ class WelcomeFarewellCog(commands.Cog, name="guild_settings"):
     ):
         guild = fetch_guild(ctx)
         set_by_member = fetch_member(ctx)
-        model = await self.guild_client.set_model(
+        model = await self.guild_client.set_welcome_farewell_model(
             model_cls,
             guild.id,
             set_by_member_id=set_by_member.id,
@@ -167,8 +176,8 @@ class WelcomeFarewellCog(commands.Cog, name="guild_settings"):
 
         await ctx.reply(f"Updated {model_cls.__name__} message successfully\nmessage:\n", embed=embed)
 
-    async def _on_event(self, model_cls: type[TVModel], member: discord.Member) -> None:
-        model = await self.guild_client.get_model(model_cls, member.guild.id)
+    async def _on_event(self, model_cls: type[WelcomeFarewellModel_T], member: discord.Member) -> None:
+        model = await self.guild_client.get_welcome_farewell_model(model_cls, member.guild.id)
 
         if not model or not model.enabled:
             return
@@ -186,7 +195,7 @@ class WelcomeFarewellCog(commands.Cog, name="guild_settings"):
 
         await channel.send(embed=embed)
 
-    def _get_embed(self, model: TVModel, **format_kwargs: str) -> discord.Embed:
+    def _get_embed(self, model: WelcomeFarewellModel_T, **format_kwargs: str) -> discord.Embed:
         embed = discord.Embed(
             color=discord.Color(model.color),
             title=model.title.format(**format_kwargs),
@@ -198,22 +207,9 @@ class WelcomeFarewellCog(commands.Cog, name="guild_settings"):
             embed.set_image(url=model.image_url.format(**format_kwargs))
         return embed
 
-    @property
-    def redis_client(self) -> RedisClient:
-        assert self.bot.redis_client, "Redis client is not initialized"
-        return self.bot.redis_client
-
     @typing.override
-    async def cog_check(self, ctx: commands.Context) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
-        if not self.bot.redis_client:
-            await ctx.send("Storage is not available, please try again later")
-            return False
-
-        if not ctx.guild:
-            await ctx.send("This command can only be used in a server")
-            return False
-
-        return True
+    async def cog_check(self, ctx: commands.Context) -> bool:  # type: ignore
+        return bool(ctx.guild)
 
 
 async def setup(bot: DiscordBot):
