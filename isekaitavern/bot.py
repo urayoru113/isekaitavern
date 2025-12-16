@@ -59,7 +59,10 @@ class DiscordBot(commands.Bot):
             raise ConnectionError(e) from e
 
         if app_config.env == "dev":
-            await self.tree.sync(guild=discord.Object(id=app_config.dev.guild_id))
+            guild = discord.Object(id=app_config.dev.guild_id)
+            await self.tree.sync(guild=guild)
+            self.tree.copy_global_to(guild=guild)
+            await self.tree.sync(guild=guild)
         if app_config.env == "prod":
             await self.tree.sync()
 
