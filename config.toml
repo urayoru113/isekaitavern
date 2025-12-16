@@ -1,0 +1,19 @@
+[bot]
+
+name = "isekaitavern"
+
+command_prefix = "!"
+command_colldown = 5
+
+cogs = ["echo", "welcome_farewell"]
+
+[log]
+name = "discord.bot"
+format = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+
+[log.colors]
+DEBUG = "cyan"
+INFO = "green"
+WARNING = "yellow"
+ERROR = "red"
+CRITICAL = "bold_red"

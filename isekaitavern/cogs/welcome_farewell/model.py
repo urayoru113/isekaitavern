@@ -4,17 +4,18 @@ import typing
 import beanie
 import pydantic
 
+from .schemes import WelcomeFarewellEmbed
 
-class _BasicModel(beanie.Document):
+
+class _WelcomeFarewellBasic(beanie.Document):
     guild_id: typing.Annotated[int, beanie.Indexed(unique=True)]
-    set_by_member_id: int = 0
     channel_id: int = 0
     title: str = ""
     description: str
-    color: int = 0xE74C3C
+    color: int = 0xE67E22  # discord.Color.orange
     thumbnail_url: str = ""
     image_url: str = ""
-    enabled: bool = True
+    enabled: bool = False
 
     last_update_time: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
@@ -22,19 +23,28 @@ class _BasicModel(beanie.Document):
     def update_last_update_time(self) -> None:
         self.last_update_time = datetime.datetime.now()
 
+    def to_embed_dict(self) -> WelcomeFarewellEmbed:
+        return {
+            "title": self.title,
+            "description": self.description,
+            "color": self.color,
+            "thumbnail": self.thumbnail_url,
+            "image": self.image_url,
+        }
 
-class WelcomeModel(_BasicModel):
+
+class WelcomeModel(_WelcomeFarewellBasic):
     description: str = "Welcome {member} joined the server"
 
     class Settings:
         name = "welcome"
 
 
-class FarewellModel(_BasicModel):
+class FarewellModel(_WelcomeFarewellBasic):
     description: str = "Farewell {member} left the server"
 
     class Settings:
         name = "farewell"
 
 
-WelcomeFarewellModel_T = typing.TypeVar("WelcomeFarewellModel_T", WelcomeModel, FarewellModel)
+WelcomeFarewellModelT = typing.TypeVar("WelcomeFarewellModelT", WelcomeModel, FarewellModel)

@@ -3,22 +3,65 @@ name = "isekaitavern"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = "==3.13.5"
 dependencies = [
-    "PyNaCl",
-    "aiohttp",
-    "beanie",
-    "dacite",
-    "discord.py",
-    "dotenv",
-    "pydantic",
-    "redis",
-    "yt-dlp",
+  "PyNaCl",
+  "aiohttp",
+  "beanie",
+  "dacite",
+  "discord.py",
+  "dotenv",
+  "pydantic",
+  "redis",
+  "yt-dlp",
+  "colorlog",
 ]
 
+[dependency-groups]
+dev = ["jishaku"]
+test = ["ruff", "black", "isort"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+extend-exclude = [".venv", "venv", ".git", "__pycache__", ".pytest_cache"]
+
 [tool.ruff.lint]
-ignore = ["PIE796"]
+select = [
+  "E",   # pycodestyle errors
+  "W",   # pycodestyle warnings
+  "F",   # pyflakes
+  "I",   # isort
+  "B",   # flake8-bugbear
+  "C4",  # flake8-comprehensions
+  "UP",  # pyupgrade
+  "ARG", # flake8-unused-arguments
+  "SIM", # flake8-simplify
+  "PTH", # flake8-use-pathlib
+  "PL",  # pylint
+  "RUF", # ruff-specific rules
+]
+ignore = [
+  "E501",    # line too long (handled by formatter)
+  "PIE796",  # enable non-unique enum
+  "PLR0402", # follow by GUIDELINE.md
+  "PLC0415", # import could inside function
+  "PLR0913", # ignore too many arguments
+]
 
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["PLC0414"]
+"__init__.py" = [
+  "F401",
+  "PLC0414",
+  "I001",
+] # unused imports, useless import alias
+"tests/**/*.py" = ["ARG", "PLR2004"] # unused args, magic values in tests
 
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
