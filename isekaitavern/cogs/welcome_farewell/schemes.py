@@ -1,7 +1,7 @@
-from typing import TypedDict
+import typing
 
 
-class WelcomeFarewellEmbed(TypedDict):
+class WelcomeFarewellEmbed(typing.TypedDict):
     title: str
     description: str
     color: int

@@ -1,0 +1,27 @@
+{
+  "commands": {
+    "welcome": {
+      "enable": "✅ 歡迎訊息已啟用",
+      "disable": "✅ 歡迎訊息已停用",
+      "channel": "✅ 歡迎訊息頻道已設定為{channel}"
+    },
+    "farewell": {
+      "enable": "✅ 歡迎訊息已啟用",
+      "disable": "✅ 歡迎訊息已停用",
+      "channel": "✅ 離開訊息頻道已設定為{channel}"
+    },
+    "errors": {
+      "channel_not_found": "❌ 找不到指定的頻道"
+    }
+  },
+  "errors": {
+    "guild_only": "❌ 此指令只能在伺服器中使用",
+    "no_permission": "❌ 你沒有權限使用此指令",
+    "bot_missing_permissions": "‼️ Bot 權限不足，無法執行此操作"
+  },
+  "common": {
+    "success": "✅ 操作成功",
+    "failed": "❌ 操作失敗",
+    "loading": "⏳ 處理中..."
+  }
+}

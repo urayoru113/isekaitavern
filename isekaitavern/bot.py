@@ -60,10 +60,10 @@ class DiscordBot(commands.Bot):
 
         if app_config.env == "dev":
             guild = discord.Object(id=app_config.dev.guild_id)
-            await self.tree.sync(guild=guild)
+            self.tree.clear_commands(guild=guild)
             self.tree.copy_global_to(guild=guild)
             await self.tree.sync(guild=guild)
-        if app_config.env == "prod":
+        elif app_config.env == "prod":
             await self.tree.sync()
 
     @typing.override

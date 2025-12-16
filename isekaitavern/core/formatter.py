@@ -3,7 +3,7 @@ from datetime import datetime
 import discord
 
 
-def format_message(template: str, member: discord.Member) -> str:
+def format_message(template: str, user: discord.Member) -> str:
     """
     轉譯訊息中的 keyword
 
@@ -35,21 +35,21 @@ def format_message(template: str, member: discord.Member) -> str:
     """
     variables = {
         # 成員相關
-        "member": member.mention,
-        "member.display_name": member.display_name,
-        "member.name": member.name,
-        "member.id": str(member.id),
-        "member.avatar": member.display_avatar.url,
-        "member.banner": member.display_banner.url if member.display_banner else "",
+        "member": user.mention,
+        "member.display_name": user.display_name,
+        "member.name": user.name,
+        "member.id": str(user.id),
+        "member.avatar": user.display_avatar.url,
+        "member.banner": user.display_banner.url if user.display_banner else "",
         # 伺服器相關
-        "server.name": member.guild.name,
-        "server.id": str(member.guild.id),
-        "server.member_count": str(member.guild.member_count),
-        "server.icon": member.guild.icon.url if member.guild.icon else "",
-        "server.avatar": member.guild_avatar.url if member.guild_avatar else "",
-        "server.banner": member.guild_banner.url if member.guild_banner else "",
+        "server.name": user.guild.name,
+        "server.id": str(user.guild.id),
+        "server.member_count": str(user.guild.member_count),
+        "server.icon": user.guild.icon.url if user.guild.icon else "",
+        "server.avatar": user.guild_avatar.url if user.guild_avatar else "",
+        "server.banner": user.guild_banner.url if user.guild_banner else "",
         # 計數
-        "count": str(member.guild.member_count),
+        "count": str(user.guild.member_count),
         # 時間
         "time": datetime.now().strftime("%H:%M"),
         "date": datetime.now().strftime("%Y-%m-%d"),

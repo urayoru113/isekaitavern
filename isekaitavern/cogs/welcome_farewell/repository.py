@@ -1,6 +1,8 @@
+from collections.abc import Awaitable
+from typing import cast
+
 import beanie.odm.operators.update.general as ops
 
-from ...utils.helpers import ensure_awaitable
 from .model import WelcomeFarewellModelT
 
 
@@ -32,13 +34,9 @@ class WelcomeFarewellRepository:
         }
 
         update_data = {k: v for k, v in update_data.items() if v is not None}
-
-        if not update_data:
-            return
-
-        await ensure_awaitable(
+        await cast(
+            Awaitable,
             model_cls.find_one(model_cls.guild_id == guild_id).upsert(
-                ops.Set(update_data),
-                on_insert=model_cls(guild_id=guild_id, **update_data),
-            )
+                ops.Set(update_data), on_insert=model_cls(guild_id=guild_id, **update_data)
+            ),
         )

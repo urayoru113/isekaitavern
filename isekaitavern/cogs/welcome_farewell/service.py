@@ -1,10 +1,23 @@
 import discord
 
 from ...core.formatter import format_message
+from ...enums import ColorEnums
 from .model import WelcomeFarewellModelT
 
 
 class WelcomeFarewellService:
+    @staticmethod
+    def get_color(color: str) -> int | None:
+        color_obj = ColorEnums.from_str(color)
+        if color_obj:
+            color_value = color_obj.value
+        else:
+            try:
+                color_value = discord.Color.from_str(color).value
+            except ValueError:
+                return None
+        return color_value
+
     @staticmethod
     def build_embed(model: WelcomeFarewellModelT, member: discord.Member) -> discord.Embed:
         embed_data = model.to_embed_dict()

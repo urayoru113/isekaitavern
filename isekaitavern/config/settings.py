@@ -69,7 +69,7 @@ def _load_settings() -> Config | DevConfig:
 
     try:
         data_class = DevConfig if env_config["env"] == "dev" else Config
-        result = dacite.from_dict(data_class=data_class, data=config, config=dacite.Config(cast=[set]))
+        result = dacite.from_dict(data_class=data_class, data=config, config=dacite.Config(cast=[set, int]))
     except dacite.DaciteError as e:
         raise ConfigException(str(e)) from e
 
