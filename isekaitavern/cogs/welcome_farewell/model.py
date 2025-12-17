@@ -3,12 +3,13 @@ import typing
 
 import beanie
 import pydantic
+from pymongo import ASCENDING, IndexModel
 
 from .schemes import WelcomeFarewellEmbed
 
 
-class _WelcomeFarewellBasic(beanie.Document):
-    guild_id: typing.Annotated[int, beanie.Indexed(unique=True)]
+class _WelcomeFarewellBasic(pydantic.BaseModel):
+    guild_id: int
     channel_id: int = 0
     title: str = ""
     description: str
@@ -33,17 +34,27 @@ class _WelcomeFarewellBasic(beanie.Document):
         }
 
 
-class WelcomeModel(_WelcomeFarewellBasic):
+class _WelcomeFarewellSettings:
+    name: str
+    indexes: typing.ClassVar[list[IndexModel]] = [
+        IndexModel(
+            [("guild_id", ASCENDING)],
+            unique=True,
+        ),
+    ]
+
+
+class WelcomeModel(_WelcomeFarewellBasic, beanie.Document):
     description: str = "Welcome {member} joined the server"
 
-    class Settings:
+    class Settings(_WelcomeFarewellSettings):
         name = "welcome"
 
 
-class FarewellModel(_WelcomeFarewellBasic):
+class FarewellModel(_WelcomeFarewellBasic, beanie.Document):
     description: str = "Farewell {member} left the server"
 
-    class Settings:
+    class Settings(_WelcomeFarewellSettings):
         name = "farewell"
 
 
