@@ -1,4 +1,29 @@
-##
+## Installation & Run
+### Prerequisites
+- Python 3.13+
+- Redis running locally or connection string
+- MongoDB running locally or connection string
+
+### Setup
+```bash
+# Install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Clone repository
+git clone https://github.com/urayoru113/isekaitavern
+cd isekaitavern
+
+# Install dependencies
+uv sync --group={dev,test}
+
+# Configure environment variables
+cp .env.example .env
+# Edit .env and add your Discord bot token and MongoDB connection string
+
+# Run the bot
+uv run main.py
+```
+
 
 ## 可用的 Keywords
 
@@ -36,8 +61,11 @@
 > 請勿在純文字訊息中使用，否則會顯示為空白。
 
 ## feature(功能)
-
-- [x] Greeting: 使用者加入和離開伺服器時的歡迎訊息
+- [x] **Greeting System**
+  - Customizable welcome messages when users join
+  - Customizable farewell messages when users leave
+  - Support for keyword templates (see Keywords section)
+  - Per-server configuration
 - [ ] Anonymous: 匿名聊天功能
 - [ ] Server: 伺服器相關
 - [ ] Channel: 頻道相關相關
