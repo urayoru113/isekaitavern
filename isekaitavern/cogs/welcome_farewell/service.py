@@ -29,8 +29,8 @@ class WelcomeFarewellService:
             title=embed_data["title"], description=embed_data["description"], color=embed_data["color"]
         )
         if model.thumbnail_url:
-            embed.set_thumbnail(url=format_message(model.thumbnail_url, member))
+            embed.set_thumbnail(url=format_message(model.thumbnail_url, member, True))
         if model.image_url:
-            embed.set_image(url=format_message(model.image_url, member))
+            embed.set_image(url=format_message(model.image_url, member, True))
 
         return embed

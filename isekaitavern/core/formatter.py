@@ -3,62 +3,74 @@ from datetime import datetime
 import discord
 
 
-def format_message(template: str, user: discord.Member) -> str:
+def format_message(template: str, member: discord.Member, include_urls: bool = False) -> str:
     """
-    轉譯訊息中的 keyword
+    Format welcome/farewell message with keyword replacement.
 
-    支援的 keywords:
+    Supported keywords:
+    Basic:
     - {member} → @Member (mention)
     - {member.name} → Josh
-    - {member.display_name} → Josh (或暱稱)
-    - {member.id} → 123456789
-    - {member.avatar} → https://cdn.discord.com/...
-    - {server} → Server Name
+    - {member.display_name} → Josh (or nickname)
     - {server.name} → Server Name
-    - {server.id} → 987654321
-    - {server.member_count} → 1234
     - {count} → 1234
+    - {date} → 2025-12-17
     - {time} → 14:30
-    - {date} → 2025-12-14
-    - {datetime} → 2025-12-14 14:30
+
+    Advanced:
+    - {member.id} → 123456789
+    - {server.id} → 987654321
+    - {member.avatar} → Avatar URL (Embed only)
+    - {member.banner} → Banner URL (Embed only)
+    - {server.icon} → Server icon URL (Embed only)
+    - {server.banner} → Server banner URL (Embed only)
+    - {server.avatar} → Guild-specific avatar URL (Embed only)
 
     Args:
-        template: 訊息模板
-        member: Discord 成員物件
+        template: Message template with keywords
+        member: Discord Member object
+        include_urls: Whether to replace image URL keywords
+                     - True: Replace with actual URLs (for Embed fields only)
+                     - False: Replace with empty string (default, for text messages)
 
     Returns:
-        轉譯後的訊息
+        Formatted message string
 
-    Example:
-        >>> format_message("歡迎 {member} 來到 {server}!", member)
-        "歡迎 @Josh 來到 MyServer!"
+    Examples:
+        >>> format_message("Welcome {member} to {server.name}!", member)
+        "Welcome @Josh to MyServer!"
+
+        >>> format_message("{member.avatar}", member, include_urls=True)
+        "https://cdn.discordapp.com/avatars/..."
     """
+    now = datetime.now()
+
     variables = {
-        # 成員相關
-        "member": user.mention,
-        "member.display_name": user.display_name,
-        "member.name": user.name,
-        "member.id": str(user.id),
-        "member.avatar": user.display_avatar.url,
-        "member.banner": user.display_banner.url if user.display_banner else "",
-        # 伺服器相關
-        "server.name": user.guild.name,
-        "server.id": str(user.guild.id),
-        "server.member_count": str(user.guild.member_count),
-        "server.icon": user.guild.icon.url if user.guild.icon else "",
-        "server.avatar": user.guild_avatar.url if user.guild_avatar else "",
-        "server.banner": user.guild_banner.url if user.guild_banner else "",
-        # 計數
-        "count": str(user.guild.member_count),
-        # 時間
-        "time": datetime.now().strftime("%H:%M"),
-        "date": datetime.now().strftime("%Y-%m-%d"),
-        "datetime": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        # Basic - Member info
+        "member": member.mention,
+        "member.name": member.name,
+        "member.display_name": member.display_name,
+        # Basic - Server info
+        "server.name": member.guild.name,
+        "count": str(member.guild.member_count),
+        # Basic - Time info
+        "date": now.strftime("%Y-%m-%d"),
+        "time": now.strftime("%H:%M"),
+        # Advanced - IDs
+        "member.id": str(member.id),
+        "server.id": str(member.guild.id),
+        # Advanced - Image URLs (Embed only)
+        "member.avatar": member.display_avatar.url if include_urls else "",
+        "member.banner": (member.display_banner.url if member.display_banner else "") if include_urls else "",
+        "server.icon": (member.guild.icon.url if member.guild.icon else "") if include_urls else "",
+        "server.banner": (member.guild.banner.url if member.guild.banner else "") if include_urls else "",
+        "server.avatar": (member.guild_avatar.url if member.guild_avatar else "") if include_urls else "",
     }
 
-    # 替換所有 keyword
+    # Sort by key length (descending) to avoid partial replacements
+    # e.g., replace {member.name} before {member}
     result = template
-    for key, value in variables.items():
-        result = result.replace(f"{{{key}}}", value)
+    for key in sorted(variables.keys(), key=len, reverse=True):
+        result = result.replace(f"{{{key}}}", variables[key])
 
     return result
