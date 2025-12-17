@@ -19,7 +19,7 @@ class WelcomeFarewellService:
         return color_value
 
     @staticmethod
-    def build_embed(model: WelcomeFarewellModelT, member: discord.Member) -> discord.Embed:
+    def build_message(model: WelcomeFarewellModelT, member: discord.Member) -> discord.Embed:
         embed_data = model.to_embed_dict()
 
         embed_data["description"] = format_message(embed_data["description"], member)

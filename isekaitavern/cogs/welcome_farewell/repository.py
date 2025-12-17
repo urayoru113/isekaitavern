@@ -1,5 +1,5 @@
+import typing
 from collections.abc import Awaitable
-from typing import cast
 
 import beanie.odm.operators.update.general as ops
 
@@ -7,10 +7,12 @@ from .model import WelcomeFarewellModelT
 
 
 class WelcomeFarewellRepository:
-    async def get_model(self, model_cls: type[WelcomeFarewellModelT], guild_id: int) -> WelcomeFarewellModelT | None:
+    async def get_welcome_farewell_model(
+        self, model_cls: type[WelcomeFarewellModelT], guild_id: int
+    ) -> WelcomeFarewellModelT | None:
         return await model_cls.find_one(model_cls.guild_id == guild_id)
 
-    async def set_model(
+    async def set_welcome_farewell_model(
         self,
         model_cls: type[WelcomeFarewellModelT],
         guild_id: int,
@@ -34,7 +36,7 @@ class WelcomeFarewellRepository:
         }
 
         update_data = {k: v for k, v in update_data.items() if v is not None}
-        await cast(
+        await typing.cast(
             Awaitable,
             model_cls.find_one(model_cls.guild_id == guild_id).upsert(
                 ops.Set(update_data), on_insert=model_cls(guild_id=guild_id, **update_data)
