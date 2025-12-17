@@ -5,7 +5,7 @@ name = "isekaitavern"
 command_prefix = "!"
 command_colldown = 5
 
-cogs = ["echo", "welcome_farewell"]
+cogs = ["dubug", "welcome_farewell"]
 
 [log]
 name = "discord.bot"
