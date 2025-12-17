@@ -44,6 +44,9 @@ class DevConfig:
     env: Literal["dev"]
     dev: Dev
 
+    def __post_init__(self):
+        self.bot.cogs.add("debug")
+
 
 @dataclasses.dataclass
 class Config:

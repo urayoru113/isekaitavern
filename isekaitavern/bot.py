@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 import typing
 from collections import defaultdict
 
@@ -11,7 +12,6 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from .config import app_config
 from .config.services import MONGO_HOST, REDIS_HOST
-from .errno import TransmittableException
 from .services.repository import RedisClient
 from .utils.extensions import get_name
 from .utils.logging import logger
@@ -68,9 +68,11 @@ class DiscordBot(commands.Bot):
 
     @typing.override
     async def on_command_error(self, ctx: commands.Context, error: discord.DiscordException):
-        if isinstance(error, commands.CommandInvokeError) and isinstance(error.original, TransmittableException):
-            await ctx.send(*error.original.args)
-        logger.error(*error.args)
+        error_message = "".join(traceback.format_exception(error))
+        if app_config.env == "dev":
+            error_message_python_highlight = f"```python\n{error_message}\n```"
+            await ctx.send(error_message_python_highlight)
+        logger.error(error_message)
 
     @typing.override
     async def close(self):
