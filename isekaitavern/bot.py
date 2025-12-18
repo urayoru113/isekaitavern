@@ -12,7 +12,7 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from .config import app_config
 from .config.services import MONGO_HOST, REDIS_HOST
-from .services.repository import RedisClient
+from .core.repository import RedisClient
 from .utils.extensions import get_name
 from .utils.logging import logger
 

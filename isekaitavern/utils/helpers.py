@@ -1,12 +1,12 @@
+import copy
 import typing
-from copy import deepcopy
-from typing import Literal
+from collections.abc import Awaitable
 
 
-def ensure_awaitable[T: typing.Awaitable](o: typing.Any | typing.Awaitable[T]) -> typing.Awaitable[T]:
+def ensure_awaitable[T](o: T | typing.Awaitable[T]) -> typing.Awaitable[T]:
     """Ensure that the obj is an Awaitable."""
-    if not isinstance(o, typing.Awaitable):
-        raise TypeError(f"Expected Awaitable, got {type(o), o}")
+    if not isinstance(o, Awaitable):
+        raise ValueError(f"Object is not an Awaitable: {o}")
     return o
 
 
@@ -20,7 +20,7 @@ def channel_id_to_name(channel_id: int | str) -> str:
     return f"<#{channel_id}>"
 
 
-def dict_deep_extend(*dicts: dict, strategy: Literal["keep", "force", "error"] = "force") -> dict:
+def dict_deep_extend(*dicts: dict, strategy: typing.Literal["keep", "force", "error"] = "force") -> dict:
     """
     Recursively merge multiple dictionaries with conflict resolution.
 
@@ -51,9 +51,9 @@ def dict_deep_extend(*dicts: dict, strategy: Literal["keep", "force", "error"] =
         raise ValueError("At least one dictionary is required")
 
     if len(dicts) == 1:
-        return deepcopy(dicts[0])
+        return copy.deepcopy(dicts[0])
 
-    result = deepcopy(dicts[0])
+    result = copy.deepcopy(dicts[0])
 
     for override in dicts[1:]:
         for key, value in override.items():
@@ -64,11 +64,11 @@ def dict_deep_extend(*dicts: dict, strategy: Literal["keep", "force", "error"] =
                 elif strategy == "keep":  # Conflict: not both dicts
                     pass  # Keep result[key]
                 elif strategy == "force":
-                    result[key] = deepcopy(value)
+                    result[key] = copy.deepcopy(value)
                 elif strategy == "error":
                     raise ValueError(f"Conflict at key '{key}': {result[key]} vs {value}")
             else:
                 # New key, add it
-                result[key] = deepcopy(value)
+                result[key] = copy.deepcopy(value)
 
     return result
