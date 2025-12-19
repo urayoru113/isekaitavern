@@ -10,7 +10,6 @@ import redis.asyncio as redis
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from .config import app_config
-from .config.services import MONGO_HOST, REDIS_HOST
 from .utils.extensions import get_name
 from .utils.logging import logger
 
@@ -26,9 +25,9 @@ class DiscordBot(commands.Bot):
         super().__init__(command_prefix=commands.when_mentioned_or(app_config.bot.command_prefix), intents=intents)
 
         self._beanie_models_to_init: dict[AsyncIOMotorDatabase, list[type[beanie.Document]]] = defaultdict(list)
-        self.__motor_client = AsyncIOMotorClient(MONGO_HOST)
+        self.__motor_client = AsyncIOMotorClient(app_config.database.mongo_url)
         logger.debug(f"start mongo client {self.__motor_client!r}")
-        self.__redis_client = redis.Redis.from_url(REDIS_HOST, decode_responses=True)
+        self.__redis_client = redis.Redis.from_url(app_config.database.redis_url, decode_responses=True)
         logger.debug(f"start redis client {self.__redis_client!r}")
 
     @typing.override

@@ -17,6 +17,14 @@ dependencies = [
   "colorlog",
 ]
 
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["isekaitavern*"]
+
 [dependency-groups]
 dev = ["jishaku"]
 test = ["ruff", "black", "isort"]

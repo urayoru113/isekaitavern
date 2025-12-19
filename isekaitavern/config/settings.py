@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Literal
 
 import dacite
+import dotenv
 
 from ..errno import ConfigException
 from ..utils.helpers import dict_deep_extend
@@ -57,6 +58,8 @@ class Config:
 
 
 def _load_settings() -> Config | DevConfig:
+    dotenv.load_dotenv()
+
     with Path("config.toml").open("rb") as f:
         config = tomllib.load(f)
 
