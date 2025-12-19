@@ -1,7 +1,7 @@
 import beanie.odm.operators.update.general as ops
+from pymongo.errors import DuplicateKeyError
 
-from isekaitavern.utils.helpers import ensure_awaitable
-
+from ...utils.helpers import ensure_awaitable
 from .model import WelcomeFarewellModelT
 
 
@@ -35,8 +35,13 @@ class WelcomeFarewellRepository:
         }
 
         update_data = {k: v for k, v in update_data.items() if v is not None}
-        await ensure_awaitable(
-            model_cls.find_one(model_cls.guild_id == guild_id).upsert(
-                ops.Set(update_data), on_insert=model_cls(guild_id=guild_id, **update_data)
+
+        # Multiple threads/tasks may try to set the same guild_id
+        try:
+            await ensure_awaitable(
+                model_cls.find_one(model_cls.guild_id == guild_id).upsert(
+                    ops.Set(update_data), on_insert=model_cls(guild_id=guild_id, **update_data)
+                )
             )
-        )
+        except DuplicateKeyError:
+            await ensure_awaitable(model_cls.find_one(model_cls.guild_id == guild_id).update(ops.Set(update_data)))
