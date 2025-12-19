@@ -60,12 +60,13 @@ uv run main.py
 > ⚠️ **注意**：圖片網址 keywords 只能在 Embed 相關設定中使用（如 thumbnail、image 等欄位）。
 > 請勿在純文字訊息中使用，否則會顯示為空白。
 
+
 ## feature(功能)
 - [x] **Greeting System**
   - Customizable welcome messages when users join
   - Customizable farewell messages when users leave
   - Support for keyword templates (see Keywords section)
   - Per-server configuration
-- [ ] Anonymous: 匿名聊天功能
-- [ ] Server: 伺服器相關
-- [ ] Channel: 頻道相關相關
+- [x] Anonymous: 匿名聊天功能
+  - Customizable anonymous name and icon
+  - Manager add/delete channedls, enable/disable anonymous function

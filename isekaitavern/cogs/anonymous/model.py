@@ -1,4 +1,3 @@
-import datetime
 import typing
 
 import beanie
@@ -6,55 +5,57 @@ import pydantic
 import pymongo
 
 
-class AnonymousSettingsModel(beanie.Document):
-    guild_id: typing.Annotated[int, beanie.Indexed(unique=True)]
+class AnonymousBaseSettings(beanie.Document):
+    """
+    Guild-level anonymous feature configuration
 
-    enabled: bool = False
-    channel_ids: set[int] = pydantic.Field(
-        default_factory=set,
-        description="Set of avaliable channels to send anonymous messages",
-    )
+    Fields:
+        guild_id: Discord guild ID
+        enabled: Whether anonymous feature is enabled
+        channel_ids: List of channel IDs where anonymous messages can be sent
+        cooldown_seconds: Cooldown time between anonymous messages
+        blocked_users: List of user IDs blocked from using anonymous feature
+    """
 
-    last_update_time: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
-
-    @beanie.before_event(beanie.Save)
-    def update_last_update_time(self) -> None:
-        self.last_update_time = datetime.datetime.now()
-
-    class Settings:
-        name = "anonymous_settings"
-        use_cache = True
-        cache_expiration_time = datetime.timedelta(minutes=5)
-
-
-class AnonymousMemberModel(beanie.Document):
     guild_id: int
-    member_id: int
-    nickname: str
-
-    avatar_url: str | None = None
-
-    last_update_time: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
-
-    @beanie.before_event(beanie.Save)
-    def update_last_update_time(self) -> None:
-        self.last_update_time = datetime.datetime.now()
+    enabled: bool = False
+    channel_ids: set[int] = pydantic.Field(default_factory=set)
+    cooldown_seconds: int = 10
+    blocked_users: set[int] = pydantic.Field(default_factory=set)
 
     class Settings:
-        name = "anonymous_member"
-        use_cache = True
-        cache_expiration_time = datetime.timedelta(minutes=5)
-
-        indexes: typing.ClassVar = [
+        name = "anonymous_config"
+        indexes: typing.ClassVar[list[pymongo.IndexModel]] = [
             pymongo.IndexModel(
-                [
-                    ("guild_id", pymongo.ASCENDING),
-                    ("member_id", pymongo.ASCENDING),
-                ],
+                [("guild_id", pymongo.ASCENDING)],
                 unique=True,
-            ),
+                name="unique_guild_id",
+            )
         ]
 
-    @classmethod
-    async def find_by_indexed(cls, guild_id: int, member_id: int) -> typing.Self | None:
-        return await cls.find_one(cls.guild_id == guild_id, cls.member_id == member_id)
+
+class AnonymousUserSettings(beanie.Document):
+    """
+    User-specific anonymous settings for each guild
+
+    Fields:
+        guild_id: Discord guild ID
+        user_id: Discord user ID
+        display_name: Anonymous display name
+        avatar_url: Anonymous avatar URL
+    """
+
+    guild_id: int
+    user_id: int
+    display_name: str = "anonymous"
+    avatar_url: str = ""
+
+    class Settings:
+        name = "anonymous_user_settings"
+        indexes: typing.ClassVar[list[pymongo.IndexModel]] = [
+            pymongo.IndexModel(
+                [("guild_id", pymongo.ASCENDING), ("user_id", pymongo.ASCENDING)],
+                unique=True,
+                name="unique_guild_user",
+            )
+        ]

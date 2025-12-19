@@ -6,9 +6,27 @@
       "channel": "✅ 歡迎訊息頻道已設定為{channel}"
     },
     "farewell": {
-      "enable": "✅ 歡迎訊息已啟用",
-      "disable": "✅ 歡迎訊息已停用",
+      "enable": "✅ 離開訊息已啟用",
+      "disable": "✅ 離開訊息已停用",
       "channel": "✅ 離開訊息頻道已設定為{channel}"
+    },
+    "anonymous": {
+      "enabled": "✅ 匿名功能已啟用",
+      "disabled": "✅ 匿名功能已停用",
+      "add_channel": "✅ 新增 {channel} 至可匿名頻道",
+      "remove_channel": "✅ 移除 {channel} 從可匿名頻道",
+      "cooldown_set": "✅ 冷卻時間已設定為 {seconds} 秒",
+      "user_blocked": "✅ 已封鎖 {user} 使用匿名功能",
+      "user_unblocked": "✅ 已解除封鎖 {user}",
+      "icon_set": "✅ 匿名頭像已設定",
+      "name_set": "✅ 匿名名稱已設定為 {name}",
+      "config_title": "匿名系統設定",
+      "config_status": "狀態",
+      "config_cooldown": "冷卻時間",
+      "config_channels": "可用頻道",
+      "config_blocked": "封鎖名單",
+      "message_sent": "✅ 匿名訊息已傳送",
+      "not_a_channel": "⛔ 此頻道非可匿名頻道"
     },
     "errors": {
       "channel_not_found": "❌ 找不到指定的頻道"
@@ -17,7 +35,8 @@
   "errors": {
     "guild_only": "❌ 此指令只能在伺服器中使用",
     "no_permission": "❌ 你沒有權限使用此指令",
-    "bot_missing_permissions": "‼️ Bot 權限不足，無法執行此操作"
+    "bot_missing_permissions": "‼️ Bot 權限不足，無法執行此操作",
+    "invalid_url": "❌ 無效的 URL"
   },
   "common": {
     "success": "✅ 操作成功",
