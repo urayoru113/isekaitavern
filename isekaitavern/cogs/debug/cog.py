@@ -46,8 +46,10 @@ class Echo(commands.Cog, name="echo"):
 
     @commands.command()
     async def reload(self, ctx: commands.Context, cog: str):
-        await self.bot.unload_extension(f"isekaitavern.cogs.{cog}.cog")
-        await self.bot.load_extension(f"isekaitavern.cogs.{cog}.cog")
+        cog = f"isekaitavern.cogs.{cog}.cog"
+        if self.bot.get_cog(cog):
+            await self.bot.unload_extension(cog)
+        await self.bot.load_extension(cog)
         await ctx.send("Reload cog success")
 
 
