@@ -21,7 +21,6 @@ class TicketCog(commands.Cog):
         self.bot = bot
         self.repo = TicketRepository()
         self.service = TicketService(self.repo)
-        self.bot._register_beanie_model(self.bot.motor_client.GuildSettings, TicketConfig, TicketRecord)
 
     ticket = app_commands.Group(name="ticket", description="Ticket System")
 
@@ -54,7 +53,7 @@ class TicketCog(commands.Cog):
 
     @typing.override
     async def cog_load(self):
-        logger.info("TicketCog loaded, registering views...")
+        await self.bot.init_beanie(self.bot.motor_client.db, TicketConfig, TicketRecord)
 
         self.launch_view = TicketLaunchView(self.service)
         self.close_view = TicketCloseView(self.service)

@@ -15,13 +15,11 @@ class AnonymousCog(commands.Cog, name="anonymous"):
     def __init__(self, bot: DiscordBot) -> None:
         logger.info("Initializing AnonymousCog")
         self.bot = bot
-        self.bot._register_beanie_model(
-            self.bot.motor_client.GuildSettings,
-            AnonymousBaseSettings,
-            AnonymousUserSettings,
-        )
         self.repo = AnonymousRepository(self.bot.redis)
         self.service = AnonymousService()
+
+    async def cog_load(self):
+        await self.bot.init_beanie(self.bot.motor_client.db, AnonymousBaseSettings)
 
     # Create command group
     anonymous = app_commands.Group(name="anonymous", description="Anonymous messaging system")

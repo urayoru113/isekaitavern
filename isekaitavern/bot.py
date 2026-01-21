@@ -72,6 +72,10 @@ class DiscordBot(commands.Bot):
         for model in models:
             self._beanie_models_to_init[database].append(model)
 
+    @staticmethod
+    async def init_beanie(database: AsyncIOMotorDatabase, *models: type[beanie.Document]):
+        await beanie.init_beanie(database, document_models=models)
+
     @property
     def prefix(self) -> str:
         return self.__prefix

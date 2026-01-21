@@ -14,9 +14,11 @@ class WelcomeFarewellCog(commands.Cog, name="guild_settings"):
     def __init__(self, bot: DiscordBot):
         logger.info("Initializing WelcomeFarewellCog")
         self.bot = bot
-        self.bot._register_beanie_model(self.bot.motor_client.GuildSettings, WelcomeModel, FarewellModel)
         self.repo = WelcomeFarewellRepository()
         self.service = WelcomeFarewellService()
+
+    async def cog_load(self):
+        await self.bot.init_beanie(self.bot.motor_client.db, WelcomeModel, FarewellModel)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
