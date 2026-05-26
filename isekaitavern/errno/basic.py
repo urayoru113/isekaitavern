@@ -14,3 +14,7 @@ class ConfigException(Exception):
 
     def __str__(self):
         return self.message
+
+
+class PastTimeError(Exception):
+    pass

@@ -17,7 +17,7 @@
       "remove_channel": "✅ 移除 {channel} 從可匿名頻道",
       "cooldown_set": "✅ 冷卻時間已設定為 {seconds} 秒",
       "user_blocked": "✅ 已封鎖 {user} 使用匿名功能",
-      "user_unblocked": "✅ 已解除封鎖 {user}",
+      "user_unblocked": "✅ 已解除封鎖 {user} 使用匿名功能",
       "icon_set": "✅ 匿名頭像已設定",
       "name_set": "✅ 匿名名稱已設定為 {name}",
       "config_title": "匿名系統設定",
@@ -27,6 +27,10 @@
       "config_blocked": "封鎖名單",
       "message_sent": "✅ 匿名訊息已傳送",
       "not_a_channel": "⛔ 此頻道非可匿名頻道"
+    },
+    "reminder": {
+      "user_list_empty": "你目前沒有任何提醒",
+      "channel_list_empty": "頻道目前沒有任何提醒"
     },
     "errors": {
       "channel_not_found": "❌ 找不到指定的頻道"

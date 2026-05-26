@@ -16,25 +16,37 @@ class Echo(commands.Cog, name="echo"):
 
     @commands.command()
     async def sync(self, ctx: commands.Context):
-        assert app_config.env == "dev"
-        guild = discord.Object(id=app_config.dev.guild_id)
+        if app_config.env != "dev":
+            await ctx.send("This command can only be used in dev environment")
+            return
+        if not ctx.guild:
+            await ctx.send("This command can only be used in a guild")
+            return
+        guild = discord.Object(id=ctx.guild.id)
         self.bot.tree.copy_global_to(guild=guild)
         await self.bot.tree.sync(guild=guild)
         await ctx.send("Sync guild commands success")
 
     @commands.command()
     async def clear(self, ctx: commands.Context):
-        assert app_config.env == "dev"
-        guild = discord.Object(id=app_config.dev.guild_id)
-        self.bot.tree.clear_commands(guild=ctx.guild)
+        if app_config.env != "dev":
+            await ctx.send("This command can only be used in dev environment")
+            return
+        if not ctx.guild:
+            await ctx.send("This command can only be used in a guild")
+            return
+        guild = discord.Object(id=ctx.guild.id)
+        self.bot.tree.clear_commands(guild=guild)
         await self.bot.tree.sync(guild=guild)
         await ctx.send("Clear guild commands success")
 
+    @commands.command()
     async def clear_global(self, ctx: commands.Context):
         self.bot.tree.clear_commands(guild=None)
         await self.bot.tree.sync()
         await ctx.send("Clear global commands success")
 
+    @commands.command()
     async def sync_global(self, ctx: commands.Context):
         self.bot.tree.clear_commands(guild=None)
         await self.bot.tree.sync()

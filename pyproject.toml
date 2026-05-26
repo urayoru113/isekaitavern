@@ -12,6 +12,7 @@ dependencies = [
   "discord.py",
   "dotenv",
   "pydantic",
+  "python-dateutil",
   "redis",
   "yt-dlp",
   "colorlog",
