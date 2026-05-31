@@ -7,7 +7,7 @@ command_colldown = 5
 
 cogs = ["ticket", "anonymous", "welcome_farewell", "reminder"]
 
-lang = "zh-TW"
+lang = "zh-tw"
 
 [log]
 name = "discord.bot"

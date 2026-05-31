@@ -26,14 +26,23 @@
       "config_channels": "可用頻道",
       "config_blocked": "封鎖名單",
       "message_sent": "✅ 匿名訊息已傳送",
-      "not_a_channel": "⛔ 此頻道非可匿名頻道"
+      "not_a_channel": "⛔ 此頻道非可匿名頻道",
+      "preview_title": "預覽匿名設定",
+      "webhook_error": "無法傳送匿名訊息",
+      "feature_disabled": "匿名功能未啟用",
+      "you_are_blocked": "你已被封鎖",
+      "status_enabled": "已啟用",
+      "status_disabled": "已停用",
+      "none": "無",
+      "already_exists": "⚠️ {channel} 已是可匿名頻道"
     },
     "reminder": {
       "user_list_empty": "你目前沒有任何提醒",
       "channel_list_empty": "頻道目前沒有任何提醒"
     },
     "errors": {
-      "channel_not_found": "❌ 找不到指定的頻道"
+      "channel_not_found": "❌ 找不到指定的頻道",
+      "out_of_webhooks": "❌ 此頻道 Webhook 數量已達上限"
     }
   },
   "errors": {

@@ -9,9 +9,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 from isekaitavern.bot import DiscordBot
 from isekaitavern.cogs.anonymous.cog import AnonymousCog
-from isekaitavern.cogs.anonymous.model import AnonymousBaseSettings, AnonymousUserSettings
+from isekaitavern.cogs.anonymous.model import AnonymousBaseSettings, AnonymousUserSettings, AnonymousWebhookInfo
 from isekaitavern.config import app_config
-
 
 # Shared event loop for session-scoped fixtures
 _loop = None
@@ -41,13 +40,14 @@ def redis_client():
 
 @pytest.fixture(scope="function", autouse=True)
 async def init_beanie(db):
-    await beanie.init_beanie(db, document_models=[AnonymousBaseSettings, AnonymousUserSettings])
+    await beanie.init_beanie(db, document_models=[AnonymousBaseSettings, AnonymousUserSettings, AnonymousWebhookInfo])
 
 
 @pytest.fixture
 async def clean_db(db, redis_client):
     await db.anonymous_config.delete_many({})
     await db.anonymous_user_settings.delete_many({})
+    await db.anonymous_webhook_auth.delete_many({})
     await redis_client.flushdb()
 
 
@@ -80,18 +80,27 @@ def make_interaction():
         interaction.response = AsyncMock()
         interaction.followup = AsyncMock()
         return interaction
+
     return _make
 
 
 @pytest.fixture
 def make_channel():
-    def _make(channel_id=111111):
+    def _make(channel_id=111111, webhook_id=123, webhook_token="test_token_abc123"):
         channel = AsyncMock(spec=discord.TextChannel)
         channel.id = channel_id
         channel.mention = f"<#{channel_id}>"
+
+        mock_webhook = AsyncMock(spec=discord.Webhook)
+        mock_webhook.id = webhook_id
+        mock_webhook.token = webhook_token
+        mock_webhook.send = AsyncMock()
+        mock_webhook.delete = AsyncMock()
+
         channel.webhooks = AsyncMock(return_value=[])
-        channel.create_webhook = AsyncMock()
+        channel.create_webhook = AsyncMock(return_value=mock_webhook)
         return channel
+
     return _make
 
 
@@ -102,6 +111,7 @@ def make_member():
         member.id = member_id
         member.mention = f"<@{member_id}>"
         return member
+
     return _make
 
 
@@ -114,4 +124,5 @@ def make_webhook():
         webhook.send = AsyncMock()
         webhook.delete = AsyncMock()
         return webhook
+
     return _make
