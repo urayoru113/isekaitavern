@@ -1,3 +1,4 @@
+import asyncio
 from unittest.mock import AsyncMock
 
 import beanie
@@ -12,39 +13,32 @@ from isekaitavern.cogs.anonymous.model import AnonymousBaseSettings, AnonymousUs
 from isekaitavern.config import app_config
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def mongo_client():
-    client = AsyncIOMotorClient(app_config.database.mongo_url)
-    yield client
-    # Teardown: Drop the database
-    client.drop_database("GuildSettings")
-    client.close()
+    return AsyncIOMotorClient(app_config.database.mongo_url)
 
-@pytest.fixture(scope="session")
+
+@pytest.fixture(scope="function")
 def db(mongo_client):
     return mongo_client.GuildSettings
 
-@pytest.fixture(scope="session", autouse=True)
-async def init_beanie(db):
-    await beanie.init_beanie(db, document_models=[AnonymousBaseSettings, AnonymousUserSettings])
-    yield
-    # Teardown: Drop collections
-    await db.anonymous_config.drop()
-    await db.anonymous_user_settings.drop()
+
+@pytest.fixture(scope="function")
+def redis_client():
+    return redis.Redis.from_url(app_config.database.redis_url, decode_responses=True)
+
 
 @pytest.fixture(scope="function", autouse=True)
+async def init_beanie(db):
+    await beanie.init_beanie(db, document_models=[AnonymousBaseSettings, AnonymousUserSettings])
+
+
+@pytest.fixture
 async def clean_db(db, redis_client):
-    # Clean MongoDB
     await db.anonymous_config.delete_many({})
     await db.anonymous_user_settings.delete_many({})
-    # Flush Redis
     await redis_client.flushdb()
 
-@pytest.fixture(scope="session")
-async def redis_client():
-    client = redis.Redis.from_url(app_config.database.redis_url, decode_responses=True)
-    yield client
-    await client.close()
 
 @pytest.fixture
 def mock_bot(mongo_client, redis_client):
@@ -54,9 +48,11 @@ def mock_bot(mongo_client, redis_client):
     bot.init_beanie = AsyncMock()
     return bot
 
+
 @pytest.fixture
 def cog(mock_bot):
     return AnonymousCog(mock_bot)
+
 
 @pytest.fixture
 def make_interaction():
@@ -64,6 +60,7 @@ def make_interaction():
         interaction = AsyncMock(spec=discord.Interaction)
         interaction.guild = AsyncMock()
         interaction.guild.id = 123456
+        interaction.guild_id = 123456
         interaction.user = AsyncMock()
         interaction.user.id = 987654
         interaction.channel = AsyncMock(spec=discord.TextChannel)
@@ -72,6 +69,7 @@ def make_interaction():
         interaction.followup = AsyncMock()
         return interaction
     return _make
+
 
 @pytest.fixture
 def make_channel():
@@ -84,6 +82,7 @@ def make_channel():
         return channel
     return _make
 
+
 @pytest.fixture
 def make_member():
     def _make(member_id=987654):
@@ -92,6 +91,7 @@ def make_member():
         member.mention = f"<@{member_id}>"
         return member
     return _make
+
 
 @pytest.fixture
 def make_webhook():
