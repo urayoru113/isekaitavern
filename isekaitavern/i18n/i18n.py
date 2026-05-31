@@ -2,6 +2,8 @@
 import json
 from pathlib import Path
 
+from ..config import app_config
+
 type MessageDict = dict[str, str | MessageDict]
 _MESSAGE_DIR = Path(__file__).parent
 _CACHE: MessageDict = {}
@@ -37,6 +39,22 @@ def get(lang: str, key: str, *args, **kwargs) -> str:
         raise TypeError(f"Expected str, got {type(value), value}")
 
     return value.format(*args, **kwargs)
+
+
+def get_default(key: str, *args, **kwargs) -> str:
+    """Get default language message
+
+    Args:
+        key: Message key with dot notation (e.g., "welcome.commands.enable.success")
+
+    Returns:
+        Default language message string
+
+    Examples:
+        >>> i18n("zh-TW", "welcome.commands.enable.success")
+        "✅ Enabled welcome message"
+    """
+    return get(app_config.bot.lang, key, *args, **kwargs)
 
 
 def _load_language(lang: str) -> None:

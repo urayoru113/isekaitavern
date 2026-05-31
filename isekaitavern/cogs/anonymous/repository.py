@@ -1,3 +1,4 @@
+import datetime
 import typing
 
 import beanie.odm.operators.update.array as array_ops
@@ -6,7 +7,7 @@ import redis.asyncio as redis
 
 from ...types import SupportsStr
 from ...utils.helpers import ensure_awaitable
-from .model import AnonymousBaseSettings, AnonymousUserSettings
+from .model import AnonymousBaseSettings, AnonymousUserSettings, AnonymousWebhookInfo
 
 
 class AnonymousRepository:
@@ -56,25 +57,6 @@ class AnonymousRepository:
 
         await ensure_awaitable(self.redis.delete(self._make_base_settings_key(guild_id)))
 
-    async def add_channel(self, guild_id: int, channel_id: int) -> None:
-        """Add a channel to anonymous channel list atomically"""
-        await ensure_awaitable(
-            AnonymousBaseSettings.find_one(AnonymousBaseSettings.guild_id == guild_id).upsert(
-                array_ops.AddToSet({"channel_ids": channel_id}),
-                on_insert=AnonymousBaseSettings(guild_id=guild_id, channel_ids={channel_id}),
-            ),
-        )
-        await ensure_awaitable(self.redis.delete(self._make_base_settings_key(guild_id)))
-
-    async def remove_channel(self, guild_id: int, channel_id: int) -> None:
-        """Remove a channel from anonymous channel list atomically"""
-        await ensure_awaitable(
-            AnonymousBaseSettings.find_one(AnonymousBaseSettings.guild_id == guild_id).update(
-                array_ops.Pull({"channel_ids": channel_id}),
-            ),
-        )
-        await ensure_awaitable(self.redis.delete(self._make_base_settings_key(guild_id)))
-
     async def block_user(self, guild_id: int, user_id: int) -> None:
         """Block a user from using anonymous feature atomically"""
         await ensure_awaitable(
@@ -116,6 +98,61 @@ class AnonymousRepository:
             user_settings_model = AnonymousUserSettings.model_validate_json(raw_json)
 
         return user_settings_model
+
+    async def check_and_set_cooldown(self, guild_id: int, user_id: int, cooldown_seconds: int) -> int | None:
+        """Check cooldown for an anonymous sender and set it if allowed.
+
+        Returns:
+            Remaining seconds if still on cooldown.
+            None if cooldown is not active (and the cooldown is set).
+        """
+
+        key = self._make_key("cooldown", guild_id, user_id)
+        ttl = await ensure_awaitable(self.redis.ttl(key))
+        # redis returns:
+        # -1: key exists but has no expiry
+        # -2: key does not exist
+        if ttl is not None and ttl > 0:
+            return int(ttl)
+
+        await ensure_awaitable(self.redis.set(key, "1", ex=cooldown_seconds))
+        return None
+
+    async def get_webhook_info(self, channel_id: int) -> AnonymousWebhookInfo | None:
+        key = self._make_key("webhook", channel_id)
+        raw_json = await ensure_awaitable(self.redis.get(name=key))
+        if not raw_json:
+            anonymous_webhook_auth = await AnonymousWebhookInfo.find_one(AnonymousWebhookInfo.channel_id == channel_id)
+            if not anonymous_webhook_auth:
+                return None
+            await ensure_awaitable(self.redis.set(key, anonymous_webhook_auth.model_dump_json(), ex=3600))
+        else:
+            anonymous_webhook_auth = AnonymousWebhookInfo.model_validate_json(raw_json)
+        return anonymous_webhook_auth
+
+    async def get_all_webhook_infos(self, guild_id: int) -> list[AnonymousWebhookInfo]:
+        webhook_infos = await AnonymousWebhookInfo.find(AnonymousWebhookInfo.guild_id == guild_id).to_list(None)
+        return webhook_infos
+
+    async def add_webhook_info(self, guild_id: int, channel_id: int, webhook_id: int, webhook_token: str) -> None:
+        now = datetime.datetime.now(datetime.UTC)
+        await ensure_awaitable(
+            AnonymousWebhookInfo.find_one(AnonymousWebhookInfo.channel_id == channel_id).upsert(
+                ops.Set({"webhook_id": webhook_id, "webhook_token": webhook_token, "updated_at": now}),
+                on_insert=AnonymousWebhookInfo(
+                    guild_id=guild_id,
+                    channel_id=channel_id,
+                    webhook_id=webhook_id,
+                    webhook_token=webhook_token,
+                    updated_at=now,
+                ),
+            ),
+        )
+
+    async def remove_webhook_info(self, channel_id: int) -> None:
+        key = self._make_key("webhook", channel_id)
+        await ensure_awaitable(self.redis.delete(key))
+        await ensure_awaitable(AnonymousWebhookInfo.find_one(AnonymousWebhookInfo.channel_id == channel_id).delete())
 
     async def set_user_settings_model(
         self,

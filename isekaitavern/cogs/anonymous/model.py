@@ -1,4 +1,5 @@
 import typing
+from datetime import datetime
 
 import beanie
 import pydantic
@@ -19,7 +20,6 @@ class AnonymousBaseSettings(beanie.Document):
 
     guild_id: int
     enabled: bool = False
-    channel_ids: set[int] = pydantic.Field(default_factory=set)
     cooldown_seconds: int = 10
     blocked_users: set[int] = pydantic.Field(default_factory=set)
 
@@ -30,6 +30,28 @@ class AnonymousBaseSettings(beanie.Document):
                 [("guild_id", pymongo.ASCENDING)],
                 unique=True,
                 name="unique_guild_id",
+            )
+        ]
+
+
+class AnonymousWebhookInfo(beanie.Document):
+    """
+    Durable storage for anonymous webhooks per channel
+    """
+
+    guild_id: int
+    channel_id: int
+    webhook_id: int
+    webhook_token: str
+    updated_at: datetime | None = None
+
+    class Settings:
+        name = "anonymous_webhook_auth"
+        indexes: typing.ClassVar[list[pymongo.IndexModel]] = [
+            pymongo.IndexModel(
+                [("channel_id", pymongo.ASCENDING)],
+                unique=True,
+                name="unique_channel_id",
             )
         ]
 

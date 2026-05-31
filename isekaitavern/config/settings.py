@@ -17,6 +17,7 @@ class Bot:
     command_prefix: str
     command_colldown: int
     cogs: set[str]
+    lang: str
 
 
 @dataclasses.dataclass
