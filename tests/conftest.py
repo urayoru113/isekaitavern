@@ -13,6 +13,17 @@ from isekaitavern.cogs.anonymous.model import AnonymousBaseSettings, AnonymousUs
 from isekaitavern.config import app_config
 
 
+# Shared event loop for session-scoped fixtures
+_loop = None
+
+
+def _get_loop():
+    global _loop
+    if _loop is None:
+        _loop = asyncio.new_event_loop()
+    return _loop
+
+
 @pytest.fixture(scope="function")
 def mongo_client():
     return AsyncIOMotorClient(app_config.database.mongo_url)
@@ -46,6 +57,7 @@ def mock_bot(mongo_client, redis_client):
     bot.motor_client = mongo_client
     bot.redis = redis_client
     bot.init_beanie = AsyncMock()
+    bot._register_beanie_model = lambda *args: None
     return bot
 
 
