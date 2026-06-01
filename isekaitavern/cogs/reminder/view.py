@@ -62,18 +62,22 @@ class ReminderCreateModal(discord.ui.Modal, title="📜 建立提醒事項!"):
                 )
 
             ts = int(utc_dt.timestamp())
-            await interaction.response.send_message(
-                f"✅ **傳音預約成功喵!**\n"
-                f"內容:\n\n{self.remind_message.value}\n\n"
-                f"時間:<t:{ts}:F> \n\n"
-                f"💡 *如果時間不對,請記得用 `/timezone` 調整時區哦!*",
-                ephemeral=True,
-            )
+            embed = discord.Embed(title="✅ 傳音預約成功喵!", color=discord.Color.green())
+            embed.add_field(name="內容", value=self.remind_message.value, inline=False)
+            embed.add_field(name="時間", value=f"<t:{ts}:F>", inline=False)
+            embed.set_footer(text="💡 如果時間不對，請記得用 /timezone 調整時區哦！")
+            await interaction.response.send_message(embed=embed, ephemeral=True)
         except ValueError as e:
             logger.error(e)
-            await interaction.response.send_message(
-                "❌ 格式好像寫錯了!請檢查日期 (YYYY-MM-DD) 與時間 (HH:MM) 格式。", ephemeral=True
+            embed = discord.Embed(
+                description="❌ 格式好像寫錯了！請檢查日期 (YYYY-MM-DD) 與時間 (HH:MM) 格式。",
+                color=discord.Color.red(),
             )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
         except PastTimeError as e:
             logger.error(e)
-            await interaction.response.send_message("❌ 預約時間已過了!", ephemeral=True)
+            embed = discord.Embed(
+                description="❌ 預約時間已過了！",
+                color=discord.Color.red(),
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)

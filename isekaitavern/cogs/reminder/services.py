@@ -72,19 +72,20 @@ class ReminderService:
 
     async def send_reminder_message(self, reminder: ReminderRecordU) -> None:
         try:
-            message_content = f"{reminder.message}"
-
             if reminder.is_user_reminder:
                 target = self.bot.get_user(reminder.user_id)
                 if not target:
-                    raise ValueError("Target user not found", reminder.channel_id)
+                    logger.warning(f"User {reminder.user_id} not in cache, skipping DM reminder")
+                    return
             else:
                 target = self.bot.get_channel(reminder.channel_id)
                 if not target:
-                    raise ValueError("Target channel not found", reminder.channel_id)
+                    logger.warning(f"Channel {reminder.channel_id} not found, skipping guild reminder")
+                    return
                 if not isinstance(target, discord.TextChannel):
-                    raise ValueError("Target channel is not a text channel", reminder.channel_id)
-            await target.send(message_content)
+                    logger.warning(f"Channel {reminder.channel_id} is not a text channel, skipping")
+                    return
+            await target.send(reminder.message)
         except Exception as e:
             logger.error(f"Error sending reminder message: {e}")
 

@@ -37,8 +37,14 @@
       "already_exists": "⚠️ {channel} 已是可匿名頻道"
     },
     "reminder": {
+      "user_list_title": "📜 你的提醒清單",
+      "channel_list_title": "📜 頻道提醒清單",
       "user_list_empty": "你目前沒有任何提醒",
-      "channel_list_empty": "頻道目前沒有任何提醒"
+      "channel_list_empty": "頻道目前沒有任何提醒",
+      "delete_success": "✅ 已刪除提醒: {message}",
+      "delete_not_found": "❌ 找不到指定的提醒",
+      "no_permission": "❌ 你沒有伺服器管理權限，無法操作頻道提醒",
+      "invalid_state": "❌ 無法取得頻道或使用者資訊，請稍後再試"
     },
     "errors": {
       "channel_not_found": "❌ 找不到指定的頻道",

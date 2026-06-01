@@ -1,4 +1,3 @@
-import datetime
 import typing
 
 import discord
@@ -29,7 +28,6 @@ class ReminderCog(commands.Cog):
 
     @typing.override
     async def cog_unload(self):
-        await self.bot.init_beanie(self.bot.motor_client.GuildSettings, ReminderGuildRecord, ReminderUserRecord)
         if self.reminder_loop.is_running():
             self.reminder_loop.stop()
 
@@ -39,33 +37,93 @@ class ReminderCog(commands.Cog):
 
     reminder_group = app_commands.Group(name="reminder", description="提醒與定時推播系統")
 
+    @app_commands.default_permissions(administrator=True)
     @reminder_group.command(name="set", description="設定提醒或伺服器定時發送")
     async def set_reminder(
         self,
         interaction: discord.Interaction,
     ):
+        if interaction.guild_id:
+            if interaction.channel is None or not isinstance(interaction.user, discord.Member):
+                embed = discord.Embed(
+                    description=i18n.get("zh-tw", "commands.reminder.invalid_state"),
+                    color=discord.Color.red(),
+                )
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+                return
+            permissions = interaction.channel.permissions_for(interaction.user)
+            if not permissions.manage_guild:
+                embed = discord.Embed(
+                    description=i18n.get("zh-tw", "commands.reminder.no_permission"),
+                    color=discord.Color.red(),
+                )
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+                return
         await interaction.response.send_modal(ReminderCreateModal(self.service, interaction.guild_id is None))
 
     @reminder_group.command(name="list", description="列出你目前設定的所有提醒")
     async def list_reminders(self, interaction: discord.Interaction):
-        reminders = await self.repo.get_due_reminders(datetime.datetime.now())
-        if reminders:
-            response_message = "\n".join(f"{r.title} ({r.remind_time.strftime('%m/%d %H:%M')})" for r in reminders)
-        elif interaction.guild_id:
-            response_message = i18n.get("zh-tw", "commands.reminder.channel_list_empty")
+        if interaction.guild_id:
+            reminders = await self.repo.get_channel_reminders(interaction.channel_id) if interaction.channel_id else []
+            title = i18n.get("zh-tw", "commands.reminder.channel_list_title")
         else:
-            response_message = i18n.get("zh-tw", "commands.reminder.user_list_empty")
-        await interaction.response.send_message(response_message, ephemeral=True)
+            reminders = await self.repo.get_user_reminders(interaction.user.id)
+            title = i18n.get("zh-tw", "commands.reminder.user_list_title")
 
+        embed = discord.Embed(title=title, color=discord.Color.blue())
+        if reminders:
+            for r in reminders:
+                embed.add_field(
+                    name=f"⏰ {r.remind_time.strftime('%m/%d %H:%M')}",
+                    value=r.message,
+                    inline=False,
+                )
+        elif interaction.guild_id:
+            embed.description = i18n.get("zh-tw", "commands.reminder.channel_list_empty")
+        else:
+            embed.description = i18n.get("zh-tw", "commands.reminder.user_list_empty")
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @app_commands.default_permissions(administrator=True)
     @reminder_group.command(name="delete", description="刪除特定的提醒")
     @app_commands.describe(reminder_id="請選擇要刪除的提醒")
     async def delete_reminder(
         self,
         interaction: discord.Interaction,
-        reminder_id: str,  # 建議用 ID 刪除最精準
+        reminder_id: str,
     ):
-        # 配合 Autocomplete 讓用戶用選的
-        pass
+        if interaction.guild_id:
+            if interaction.channel is None or not isinstance(interaction.user, discord.Member):
+                embed = discord.Embed(
+                    description=i18n.get("zh-tw", "commands.reminder.invalid_state"),
+                    color=discord.Color.red(),
+                )
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+                return
+            permissions = interaction.channel.permissions_for(interaction.user)
+            if not permissions.manage_guild:
+                embed = discord.Embed(
+                    description=i18n.get("zh-tw", "commands.reminder.no_permission"),
+                    color=discord.Color.red(),
+                )
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+                return
+
+        reminder = await self.repo.get_reminder_by_id(reminder_id)
+        if not reminder:
+            embed = discord.Embed(
+                description=i18n.get("zh-tw", "commands.reminder.delete_not_found"),
+                color=discord.Color.red(),
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        await reminder.delete()
+        embed = discord.Embed(
+            description=i18n.get("zh-tw", "commands.reminder.delete_success", message=reminder.message),
+            color=discord.Color.green(),
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @delete_reminder.autocomplete("reminder_id")
     async def reminder_id_autocomplete(
@@ -74,11 +132,14 @@ class ReminderCog(commands.Cog):
         current: str,
     ) -> list[app_commands.Choice[str]]:
         """讓用戶在輸入刪除指令時,自動跳出他擁有的提醒清單"""
-        reminders = await self.repo.get_user_reminders(interaction.user.id)
+        if interaction.guild_id:
+            reminders = await self.repo.get_channel_reminders(interaction.channel_id) if interaction.channel_id else []
+        else:
+            reminders = await self.repo.get_user_reminders(interaction.user.id)
         return [
-            app_commands.Choice(name=f"{r.title} ({r.remind_time.strftime('%m/%d %H:%M')})", value=str(r.id))
+            app_commands.Choice(name=f"{r.message} ({r.remind_time.strftime('%m/%d %H:%M')})", value=str(r.id))
             for r in reminders
-            if current.lower() in r.title.lower()
+            if current.lower() in r.message.lower()
         ][:25]  # Discord 限制最多顯示 25 個
 
 

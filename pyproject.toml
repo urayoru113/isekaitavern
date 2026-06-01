@@ -59,6 +59,7 @@ ignore = [
   "PLR0402", # follow by GUIDELINE.md
   "PLC0415", # import could inside function
   "PLR0913", # ignore too many arguments
+  "RUF001",  # allow CJK fullwidth punctuation in user-facing strings
 ]
 
 [tool.ruff.lint.per-file-ignores]

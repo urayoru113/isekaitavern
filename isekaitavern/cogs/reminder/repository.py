@@ -55,6 +55,9 @@ class ReminderRepository:
     async def get_guild_reminders(self, guild_id: int) -> list[ReminderGuildRecord]:
         return await ReminderGuildRecord.find(ReminderGuildRecord.guild_id == guild_id).sort("+remind_time").to_list()
 
+    async def get_channel_reminders(self, channel_id: int) -> list[ReminderGuildRecord]:
+        return await ReminderGuildRecord.find(ReminderGuildRecord.channel_id == channel_id).sort("+remind_time").to_list()
+
     async def get_reminder_by_id(self, reminder_id: str) -> ReminderRecordU | None:
         try:
             document_id = PydanticObjectId(reminder_id)

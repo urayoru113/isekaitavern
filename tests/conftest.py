@@ -10,6 +10,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from isekaitavern.bot import DiscordBot
 from isekaitavern.cogs.anonymous.cog import AnonymousCog
 from isekaitavern.cogs.anonymous.model import AnonymousBaseSettings, AnonymousUserSettings, AnonymousWebhookInfo
+from isekaitavern.cogs.reminder.cog import ReminderCog
+from isekaitavern.cogs.reminder.model import ReminderGuildRecord, ReminderUserRecord
 from isekaitavern.config import app_config
 
 # Shared event loop for session-scoped fixtures
@@ -40,7 +42,13 @@ def redis_client():
 
 @pytest.fixture(scope="function", autouse=True)
 async def init_beanie(db):
-    await beanie.init_beanie(db, document_models=[AnonymousBaseSettings, AnonymousUserSettings, AnonymousWebhookInfo])
+    await beanie.init_beanie(db, document_models=[
+        AnonymousBaseSettings,
+        AnonymousUserSettings,
+        AnonymousWebhookInfo,
+        ReminderUserRecord,
+        ReminderGuildRecord,
+    ])
 
 
 @pytest.fixture
@@ -48,6 +56,8 @@ async def clean_db(db, redis_client):
     await db.anonymous_config.delete_many({})
     await db.anonymous_user_settings.delete_many({})
     await db.anonymous_webhook_auth.delete_many({})
+    await db.user_reminder_records.delete_many({})
+    await db.guild_reminder_records.delete_many({})
     await redis_client.flushdb()
 
 
@@ -67,16 +77,22 @@ def cog(mock_bot):
 
 
 @pytest.fixture
+def reminder_cog(mock_bot):
+    return ReminderCog(mock_bot)
+
+
+@pytest.fixture
 def make_interaction():
     def _make():
         interaction = AsyncMock(spec=discord.Interaction)
         interaction.guild = AsyncMock()
         interaction.guild.id = 123456
         interaction.guild_id = 123456
-        interaction.user = AsyncMock()
+        interaction.user = AsyncMock(spec=discord.Member)
         interaction.user.id = 987654
         interaction.channel = AsyncMock(spec=discord.TextChannel)
         interaction.channel.id = 111111
+        interaction.channel_id = 111111
         interaction.response = AsyncMock()
         interaction.followup = AsyncMock()
         return interaction
