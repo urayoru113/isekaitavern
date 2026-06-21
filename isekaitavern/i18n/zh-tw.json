@@ -46,6 +46,15 @@
       "no_permission": "❌ 你沒有伺服器管理權限，無法操作頻道提醒",
       "invalid_state": "❌ 無法取得頻道或使用者資訊，請稍後再試"
     },
+    "giveaway": {
+      "title": "🎉 {role} 抽獎結果",
+      "winners": "🏆 中獎者（{count} 人）",
+      "invalid_count": "⛔ 抽獎人數必須大於 0",
+      "empty_role": "⛔ 該身分組沒有任何成員",
+      "not_enough_members": "⛔ 該身分組只有 {count} 人，不足以抽取 {num} 人",
+      "list_title": "📋 {role} 成員列表（{count} 人）",
+      "list_members": "成員"
+    },
     "errors": {
       "channel_not_found": "❌ 找不到指定的頻道",
       "out_of_webhooks": "❌ 此頻道 Webhook 數量已達上限"
