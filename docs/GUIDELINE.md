@@ -201,8 +201,6 @@ The main configuration file. **Do not create new config files** unless absolutel
 [bot]
 name = "isekaitavern"
 lang = "zh-TW"
-command_prefix = "!"
-command_colldown = 5
 cogs = ["ticket", "anonymous", "welcome_farewell", "reminder"]
 
 [log]

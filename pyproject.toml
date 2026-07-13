@@ -28,7 +28,15 @@ include = ["isekaitavern*"]
 
 [dependency-groups]
 dev = ["jishaku"]
-test = ["ruff", "black", "isort", "pytest", "pytest-asyncio", "pytest-mock"]
+test = [
+    "ruff",
+    "black",
+    "isort",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-mock",
+    "pytest-cov>=7.1.0",
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

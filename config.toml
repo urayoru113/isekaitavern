@@ -2,10 +2,7 @@
 
 name = "isekaitavern"
 
-command_prefix = "!"
-command_colldown = 5
-
-cogs = ["ticket", "anonymous", "welcome_farewell", "reminder", "giveaway"]
+cogs = ["ticket", "anonymous", "welcome_farewell", "reminder"]
 
 lang = "zh-tw"
 

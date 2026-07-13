@@ -14,8 +14,6 @@ from ..utils.helpers import dict_deep_extend
 @dataclasses.dataclass
 class Bot:
     token: str
-    command_prefix: str
-    command_colldown: int
     cogs: set[str]
     lang: str
 

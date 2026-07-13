@@ -16,13 +16,10 @@ from .utils.logging import logger
 
 class DiscordBot(commands.Bot):
     def __init__(self) -> None:
-        self.__prefix = app_config.bot.command_prefix
-
         intents = discord.Intents.default()
-        intents.message_content = True
         intents.members = True
 
-        super().__init__(command_prefix=commands.when_mentioned_or(app_config.bot.command_prefix), intents=intents)
+        super().__init__(command_prefix=lambda *_: (), intents=intents)
 
         self._beanie_models_to_init: dict[AsyncIOMotorDatabase, list[type[beanie.Document]]] = defaultdict(list)
         self.__motor_client = AsyncIOMotorClient(app_config.database.mongo_url)
@@ -60,12 +57,13 @@ class DiscordBot(commands.Bot):
         elif app_config.env == "prod":
             await self.tree.sync()
 
-    @typing.override
-    async def on_command_error(self, ctx: commands.Context, error: discord.DiscordException):
+    async def on_tree_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
         error_message = "".join(traceback.format_exception(error))
         if app_config.env == "dev":
-            error_message_python_highlight = f"```python\n{error_message}\n```"
-            await ctx.send(error_message_python_highlight)
+            if not interaction.response.is_done():
+                await interaction.response.send_message(f"```python\n{error_message}\n```", ephemeral=True)
+            else:
+                await interaction.followup.send(f"```python\n{error_message}\n```", ephemeral=True)
         logger.error(error_message)
 
     def _register_beanie_model(self, database: AsyncIOMotorDatabase, *models: type[beanie.Document]):
@@ -75,10 +73,6 @@ class DiscordBot(commands.Bot):
     @staticmethod
     async def init_beanie(database: AsyncIOMotorDatabase, *models: type[beanie.Document]):
         await beanie.init_beanie(database, document_models=models)
-
-    @property
-    def prefix(self) -> str:
-        return self.__prefix
 
     @property
     def redis(self) -> redis.Redis:
