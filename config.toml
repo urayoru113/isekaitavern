@@ -2,7 +2,14 @@
 
 name = "isekaitavern"
 
-cogs = ["ticket", "anonymous", "welcome_farewell", "reminder"]
+cogs = [
+  # "ticket",
+  # "anonymous",
+  # "welcome_farewell",
+  # "reminder",
+  "channel",
+  "ai",
+]
 
 lang = "zh-tw"
 

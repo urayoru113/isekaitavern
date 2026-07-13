@@ -16,6 +16,7 @@ dependencies = [
   "redis",
   "yt-dlp",
   "colorlog",
+  "httpx>=0.28.1",
 ]
 
 [build-system]
