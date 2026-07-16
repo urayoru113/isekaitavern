@@ -70,7 +70,7 @@
     "ai": {
       "summary_triggered": "⏳ 正在生成摘要...",
       "invalid_channel": "❌ 此指令只能在文字頻道中使用",
-      "no_messages": "❌ 頻道中沒有可摘要的訊息"
+      "error": "功能無法使用"
     },
     "admin": {
       "create_success": "✅ 已建立頻道 {channel}",

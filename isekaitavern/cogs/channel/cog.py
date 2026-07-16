@@ -4,8 +4,8 @@ from discord.ext import commands
 
 from ...bot import DiscordBot
 from ...i18n import i18n
-from ...services.channel import ChannelService
 from ...utils.logging import logger
+from .services import ChannelService
 
 
 class ChannelCog(commands.Cog):

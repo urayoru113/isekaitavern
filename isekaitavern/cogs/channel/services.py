@@ -1,9 +1,7 @@
-import datetime
-
 import discord
 
-from ..i18n import i18n
-from ..utils.logging import logger
+from ...i18n import i18n
+from ...utils.logging import logger
 
 
 class ChannelService:
@@ -55,20 +53,3 @@ class ChannelService:
             await channel.edit(name=new_name, reason=reason)
         except discord.Forbidden as e:
             raise Exception(i18n.get_default("commands.channel.no_permission_edit")) from e
-
-    async def get_history(
-        self,
-        channel: discord.TextChannel,
-        limit: int = 100,
-        before: datetime.datetime | None = None,
-        after: datetime.datetime | None = None,
-    ) -> list[discord.Message]:
-        """Fetch channel messages.
-
-        Returns:
-            List of discord.Message objects.
-        """
-        try:
-            return [m async for m in channel.history(limit=limit, after=after, before=before)]
-        except discord.Forbidden as e:
-            raise Exception(i18n.get_default("commands.channel.no_permission_read")) from e
