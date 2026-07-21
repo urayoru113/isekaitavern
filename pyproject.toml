@@ -18,15 +18,28 @@ dependencies = [
   "redis",
   "yt-dlp",
   "colorlog",
+  "httpx>=0.28.1",
 ]
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
 
-[dependency-groups]
+
+where = ["."]
+include = ["isekaitavern*"]
+[tool.hatch.build.targets.wheel]
+
+
+[dependency-groups]packages = ["isekaitavern"]
 dev = ["jishaku"]
-test = ["ruff", "black", "isort", "pytest", "pytest-asyncio", "pytest-mock"]
+test = [
+  "ruff",
+  "black",
+  "isort",
+  "pytest",
+  "pytest-asyncio",
+  "pytest-mock",
+  "pytest-cov>=7.1.0",
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

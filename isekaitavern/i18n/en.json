@@ -1,0 +1,51 @@
+{
+  "commands": {
+    "channel": {
+      "create_success": "✅ Created channel {channel}",
+      "delete_success": "✅ Deleted channel #{name}",
+      "rename_success": "✅ Renamed channel {channel} to #{name}",
+      "error": "❌ {detail}",
+      "no_permission_delete": "Bot lacks permission to delete this channel",
+      "no_permission_edit": "Bot lacks permission to edit this channel",
+      "unknown_type": "Unknown channel type: {type}",
+      "invalid_state": "❌ Unable to get server info, please try again later",
+      "category_success": "✅ Created category {category}",
+      "no_permission_read": "Bot lacks permission to read this channel's messages"
+    },
+    "ai": {
+      "summary_triggered": "⏳ Generating summary...",
+      "invalid_channel": "❌ This command can only be used in a text channel",
+      "no_messages": "❌ No messages to summarize in this channel"
+    },
+    "admin": {
+      "create_success": "✅ Created channel {channel}",
+      "delete_success": "✅ Deleted channel #{name}",
+      "rename_success": "✅ Renamed channel {channel} to #{name}",
+      "purge_success": "✅ Deleted {count} messages",
+      "ban_success": "✅ Banned {member}",
+      "unban_success": "✅ Unbanned {member}",
+      "kick_success": "✅ Kicked {member}",
+      "timeout_success": "✅ Timed out {member} for {minutes} minutes",
+      "untimeout_success": "✅ Removed timeout from {member}",
+      "error": "❌ {detail}",
+      "no_permission_delete_channel": "Bot lacks permission to delete this channel",
+      "no_permission_edit_channel": "Bot lacks permission to edit this channel",
+      "no_permission_purge": "Bot lacks permission to manage messages",
+      "no_permission_ban": "Bot lacks permission to ban this member",
+      "no_permission_unban": "Bot lacks permission to unban",
+      "no_permission_kick": "Bot lacks permission to kick this member",
+      "no_permission_timeout": "Bot lacks permission to timeout this member",
+      "no_permission_untimeout": "Bot lacks permission to remove timeout from this member",
+      "hierarchy_owner": "Cannot perform this action on the server owner",
+      "hierarchy_self": "Cannot perform this action on the bot itself",
+      "hierarchy_moderator": "Cannot perform this action on a member with equal or higher role",
+      "hierarchy_bot": "Bot's role is not high enough to perform this action",
+      "not_banned": "This user is not banned",
+      "purge_failed": "Failed to purge messages: {detail}",
+      "unknown_channel_type": "Unknown channel type: {type}",
+      "invalid_state": "❌ Unable to get server or user info, please try again later",
+      "invalid_channel": "❌ This command can only be used in a text channel",
+      "category_success": "✅ Created category {category}"
+    }
+  }
+}

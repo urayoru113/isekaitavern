@@ -6,3 +6,5 @@ __pycache__
 
 !.gitignore
 !.env.example
+token-optimizer
+graphify-out
