@@ -1,53 +1,34 @@
-import asyncio
 import traceback
 import typing
-from collections import defaultdict
 
-import beanie
+import assistant_core
 import discord
 import discord.ext.commands as commands
-import redis.asyncio as redis
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from .config import app_config
-from .utils.extensions import get_name
 from .utils.logging import logger
 
 
 class DiscordBot(commands.Bot):
     def __init__(self) -> None:
+        logger.info("Initializing bot")
         intents = discord.Intents.default()
         intents.members = True
+        intents.message_content = True
 
         super().__init__(command_prefix=lambda *_: (), intents=intents)
 
-        self._beanie_models_to_init: dict[AsyncIOMotorDatabase, list[type[beanie.Document]]] = defaultdict(list)
-        self.__motor_client = AsyncIOMotorClient(app_config.database.mongo_url)
-        logger.debug(f"start mongo client {self.__motor_client!r}")
-        self.__redis_client = redis.Redis.from_url(app_config.database.redis_url, decode_responses=True)
-        logger.debug(f"start redis client {self.__redis_client!r}")
+        self.agent = assistant_core.DiscordAgent(
+            api_key=app_config.agent.token,
+            base_url=app_config.agent.base_url,
+            model=app_config.agent.model,
+            language=app_config.bot.lang,
+        )
 
     @typing.override
     async def setup_hook(self):
         if app_config.env == "dev":
             await self.load_extension("jishaku")
-
-        cogs = [get_name(cog) for cog in app_config.bot.cogs]
-        logger.info(f"load extensions: {cogs}")
-        co_cogs = (self.load_extension(cog) for cog in cogs)
-        await asyncio.gather(*co_cogs)
-
-        beanie_init_tasks = (
-            beanie.init_beanie(database, document_models=models)
-            for database, models in self._beanie_models_to_init.items()
-        )
-
-        try:
-            await self.redis.ping()
-            await asyncio.gather(*beanie_init_tasks)
-        except Exception as e:
-            logger.error(f"Connection failed during startup: {e}")
-            raise ConnectionError(e) from e
 
         if app_config.env == "dev":
             guild = discord.Object(id=app_config.dev.guild_id)
@@ -66,18 +47,39 @@ class DiscordBot(commands.Bot):
                 await interaction.followup.send(f"```python\n{error_message}\n```", ephemeral=True)
         logger.error(error_message)
 
-    def _register_beanie_model(self, database: AsyncIOMotorDatabase, *models: type[beanie.Document]):
-        for model in models:
-            self._beanie_models_to_init[database].append(model)
+    @typing.override
+    async def on_message(self, message: discord.Message):
+        if message.author.bot:
+            return
+        if not self.user:
+            return
+        if not message.guild:
+            return
+        if not message.channel or not isinstance(message.channel, discord.TextChannel):
+            return
+        if not message.author or not isinstance(message.author, discord.Member):
+            return
 
-    @staticmethod
-    async def init_beanie(database: AsyncIOMotorDatabase, *models: type[beanie.Document]):
-        await beanie.init_beanie(database, document_models=models)
+        should_reply = self.user.mentioned_in(message)
+        if not should_reply and message.reference:
+            replied = message.reference.resolved
 
-    @property
-    def redis(self) -> redis.Redis:
-        return self.__redis_client
+            if replied is None and message.reference.message_id:
+                try:
+                    replied = await message.channel.fetch_message(message.reference.message_id)
+                except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+                    replied = None
 
-    @property
-    def motor_client(self) -> AsyncIOMotorClient:
-        return self.__motor_client
+            should_reply = isinstance(replied, discord.Message) and replied.author.id == self.user.id
+
+        if should_reply:
+            logger.info(f"Message: {message.content}")
+            res = await self.agent.run(
+                self,
+                message.guild,
+                message.channel,
+                message.author,
+                message.content,
+            )
+            if res[0]:
+                await message.reply(res[0])

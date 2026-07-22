@@ -9,16 +9,15 @@ requires-python = "==3.13.5"
 dependencies = [
   "PyNaCl",
   "aiohttp",
-  "beanie",
   "dacite",
   "discord.py",
   "dotenv",
   "pydantic",
   "python-dateutil",
-  "redis",
   "yt-dlp",
   "colorlog",
   "httpx>=0.28.1",
+  "assistant-core",
 ]
 
 [build-system]
@@ -88,3 +87,6 @@ quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
+
+[tool.uv.sources]
+assistant-core = { git = "https://github.com/urayoru113/assistant_core" }

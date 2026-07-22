@@ -14,14 +14,14 @@ from ..utils.helpers import dict_deep_extend
 @dataclasses.dataclass
 class Bot:
     token: str
-    cogs: set[str]
     lang: str
 
 
 @dataclasses.dataclass
-class DatabaseConfig:
-    mongo_url: str
-    redis_url: str
+class Agent:
+    token: str
+    base_url: str
+    model: str
 
 
 @dataclasses.dataclass
@@ -39,23 +39,18 @@ class Dev:
 @dataclasses.dataclass
 class DevConfig:
     bot: Bot
-    database: DatabaseConfig
     log: Log
     env: Literal["dev"]
     dev: Dev
-    assistance_url: str
-
-    def __post_init__(self):
-        self.bot.cogs.add("debug")
+    agent: Agent
 
 
 @dataclasses.dataclass
 class Config:
     bot: Bot
-    database: DatabaseConfig
     log: Log
     env: Literal["test", "prod"]
-    assistance_url: str
+    agent: Agent
 
 
 def _load_settings() -> Config | DevConfig:
@@ -66,9 +61,12 @@ def _load_settings() -> Config | DevConfig:
 
     env_config = {
         "bot": {"token": os.environ.get("DISCORD_BOT_TOKEN")},
-        "database": {"mongo_url": os.environ.get("MONGO_URL"), "redis_url": os.environ.get("REDIS_URL")},
         "env": os.environ.get("ENV"),
-        "assistance_url": os.environ.get("AI_ASSISTANCE_URL"),
+        "agent": {
+            "token": os.environ.get("PROVIDER_API_KEY"),
+            "base_url": os.environ.get("LLM_BASE_URL"),
+            "model": os.environ.get("LLM_MODEL"),
+        },
     }
     if env_config["env"] == "dev":
         env_config.update({"dev": {"guild_id": os.environ.get("DEV_GUILD_ID")}})

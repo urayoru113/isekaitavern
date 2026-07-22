@@ -1,23 +1,5 @@
 import copy
 import typing
-from collections.abc import Awaitable
-
-
-def ensure_awaitable[T](o: T | typing.Awaitable[T]) -> typing.Awaitable[T]:
-    """Ensure that the obj is an Awaitable."""
-    if not isinstance(o, Awaitable):
-        raise ValueError(f"Object is not an Awaitable: {o}")
-    return o
-
-
-def user_id_to_name(user_id: int | str) -> str:
-    """Conver user id to mention string."""
-    return f"<@{user_id}>"
-
-
-def channel_id_to_name(channel_id: int | str) -> str:
-    """Convert channel id to mention string."""
-    return f"<#{channel_id}>"
 
 
 def dict_deep_extend(*dicts: dict, strategy: typing.Literal["keep", "force", "error"] = "force") -> dict:
