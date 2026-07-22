@@ -27,25 +27,10 @@ class DiscordBot(commands.Bot):
 
     @typing.override
     async def setup_hook(self):
-        if app_config.env == "dev":
-            await self.load_extension("jishaku")
+        await self.tree.sync()
 
-        if app_config.env == "dev":
-            guild = discord.Object(id=app_config.dev.guild_id)
-            self.tree.clear_commands(guild=guild)
-            self.tree.copy_global_to(guild=guild)
-            await self.tree.sync(guild=guild)
-        elif app_config.env == "prod":
-            await self.tree.sync()
-
-    async def on_tree_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
-        error_message = "".join(traceback.format_exception(error))
-        if app_config.env == "dev":
-            if not interaction.response.is_done():
-                await interaction.response.send_message(f"```python\n{error_message}\n```", ephemeral=True)
-            else:
-                await interaction.followup.send(f"```python\n{error_message}\n```", ephemeral=True)
-        logger.error(error_message)
+    async def on_tree_error(self, _: discord.Interaction, error: discord.app_commands.AppCommandError):
+        logger.error("".join(traceback.format_exception(error)))
 
     @typing.override
     async def on_message(self, message: discord.Message):

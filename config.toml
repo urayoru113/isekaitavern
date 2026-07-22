@@ -1,16 +1,6 @@
 [bot]
 
-name = "isekaitavern"
-
 lang = "zh-tw"
 
 [log]
-name = "discord.bot"
 format = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
-
-[log.colors]
-DEBUG = "cyan"
-INFO = "green"
-WARNING = "yellow"
-ERROR = "red"
-CRITICAL = "bold_red"
