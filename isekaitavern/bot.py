@@ -33,7 +33,7 @@ class DiscordBot(commands.Bot):
         logger.error("".join(traceback.format_exception(error)))
 
     @typing.override
-    async def on_message(self, message: discord.Message):
+    async def on_message(self, message: discord.Message):  # noqa: PLR0912
         if not message.guild:
             return
         if message.author.bot:
@@ -67,14 +67,12 @@ class DiscordBot(commands.Bot):
 
         if should_reply:
             if message.guild.id not in app_config.bot.allowed_guilds:
-                if app_config.bot.lang == "en":
-                    await message.reply(
-                        "This bot is only available in approved servers. Please contact the developer to request access."
-                    )
-                elif app_config.bot.lang == "zh-TW":
-                    await message.reply("此機器人僅開放白名單伺服器使用，如需加入白名單，請聯絡開發者。")
-                else:
-                    typing.assert_never(app_config.bot.lang)
+                replied_message = (
+                    "此機器人僅開放白名單伺服器使用，如需加入白名單，請聯絡開發者。"
+                    if app_config.bot.lang == "zh-TW"
+                    else "This bot is only available in approved servers. Please contact the developer to request access."
+                )
+                await message.reply(replied_message)
                 return
 
             logger.info(f"Message: {message.content}")
