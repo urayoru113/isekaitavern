@@ -1,62 +1,68 @@
-import dataclasses
-import os
 import tomllib
+from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
-import dacite
-import dotenv
-
-from ..errno import ConfigException
-from ..utils.helpers import dict_deep_extend
+from pydantic import BaseModel, ConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-@dataclasses.dataclass
-class Bot:
-    lang: str
+class Bot(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    lang: Literal["en", "zh-TW"]
+    allowed_guilds: list[int]
 
 
-@dataclasses.dataclass
-class Agent:
+class Log(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    format: str
+
+
+class Agent(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     token: str
     base_url: str
     model: str
 
 
-@dataclasses.dataclass
-class Log:
-    format: str
+class Secrets(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        extra="ignore",
+    )
+
+    discord_bot_token: str
+
+    agent_token: str
+    agent_base_url: str
+    agent_model: str
 
 
-@dataclasses.dataclass
-class AppConfig:
+class AppConfig(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    agent: Agent
     bot: Bot
     log: Log
-    agent: Agent
 
 
-def _load_settings() -> AppConfig:
-    dotenv.load_dotenv()
-
+@lru_cache(1)
+def load_settings() -> AppConfig:
     with Path("config.toml").open("rb") as f:
         config = tomllib.load(f)
 
-    env_config = {
-        "bot": {"token": os.environ.get("DISCORD_BOT_TOKEN")},
-        "agent": {
-            "token": os.environ.get("PROVIDER_API_KEY"),
-            "base_url": os.environ.get("LLM_BASE_URL"),
-            "model": os.environ.get("LLM_MODEL"),
-        },
+    secrets = Secrets()  # pyright: ignore[reportCallIssue]
+
+    config["agent"] = {
+        "token": secrets.agent_token,
+        "base_url": secrets.agent_base_url,
+        "model": secrets.agent_model,
     }
 
-    config = dict_deep_extend(config, env_config, strategy="error")
-
-    try:
-        result = dacite.from_dict(data_class=AppConfig, data=config, config=dacite.Config(cast=[int]))
-    except dacite.DaciteError as e:
-        raise ConfigException(str(e)) from e
-
-    return result
+    return AppConfig.model_validate(config)
 
 
-app_config = _load_settings()
+app_config = load_settings()

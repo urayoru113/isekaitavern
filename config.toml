@@ -1,6 +1,10 @@
 [bot]
-
 lang = "zh-TW"
+
+allowed_guilds = [
+  1253674065097654273, # Isekai tavern
+  1024656722708664442, # Test server
+]
 
 [log]
 format = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'

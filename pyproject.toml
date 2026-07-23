@@ -61,4 +61,4 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.uv.sources]
-assistant-core = { git = "https://github.com/urayoru113/assistant_core" }
+assistant-core = { git = "http://forgejo.home.arpa/urayoru113/assistant_core.git" } # Self-hosted Forgejo

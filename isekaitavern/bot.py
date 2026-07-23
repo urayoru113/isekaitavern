@@ -18,9 +18,6 @@ class DiscordBot(commands.Bot):
 
         super().__init__(command_prefix=lambda *_: (), intents=intents)
 
-        if app_config.bot.lang not in ("en", "zh-TW"):
-            raise ValueError(f"Invalid language: {app_config.bot.lang}")
-
         self.agent = assistant_core.DiscordAgent(
             api_key=app_config.agent.token,
             base_url=app_config.agent.base_url,
@@ -37,11 +34,22 @@ class DiscordBot(commands.Bot):
 
     @typing.override
     async def on_message(self, message: discord.Message):
+        if not message.guild:
+            return
+
+        if message.guild.id not in app_config.bot.allowed_guilds:
+            if app_config.bot.lang == "en":
+                await message.reply(
+                    "This bot is only available in approved servers. Please contact the developer to request access."
+                )
+            elif app_config.bot.lang == "zh-TW":
+                await message.reply("此機器人僅開放白名單伺服器使用，如需加入白名單，請聯絡開發者。")
+            else:
+                typing.assert_never(app_config.bot.lang)
+
         if message.author.bot:
             return
         if not self.user:
-            return
-        if not message.guild:
             return
         if not message.channel or not isinstance(message.channel, discord.TextChannel):
             return
