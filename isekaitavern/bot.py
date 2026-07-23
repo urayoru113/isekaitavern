@@ -36,17 +36,6 @@ class DiscordBot(commands.Bot):
     async def on_message(self, message: discord.Message):
         if not message.guild:
             return
-
-        if message.guild.id not in app_config.bot.allowed_guilds:
-            if app_config.bot.lang == "en":
-                await message.reply(
-                    "This bot is only available in approved servers. Please contact the developer to request access."
-                )
-            elif app_config.bot.lang == "zh-TW":
-                await message.reply("此機器人僅開放白名單伺服器使用，如需加入白名單，請聯絡開發者。")
-            else:
-                typing.assert_never(app_config.bot.lang)
-
         if message.author.bot:
             return
         if not self.user:
@@ -77,6 +66,17 @@ class DiscordBot(commands.Bot):
             should_reply = isinstance(replied, discord.Message) and replied.author.id == self.user.id
 
         if should_reply:
+            if message.guild.id not in app_config.bot.allowed_guilds:
+                if app_config.bot.lang == "en":
+                    await message.reply(
+                        "This bot is only available in approved servers. Please contact the developer to request access."
+                    )
+                elif app_config.bot.lang == "zh-TW":
+                    await message.reply("此機器人僅開放白名單伺服器使用，如需加入白名單，請聯絡開發者。")
+                else:
+                    typing.assert_never(app_config.bot.lang)
+                return
+
             logger.info(f"Message: {message.content}")
             res = await self.agent.run(
                 self,
