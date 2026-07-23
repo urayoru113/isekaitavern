@@ -6,12 +6,7 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = "==3.13.5"
-dependencies = [
-  "dacite",
-  "discord.py",
-  "dotenv",
-  "assistant-core",
-]
+dependencies = ["dacite", "discord.py", "dotenv", "assistant-core"]
 
 [build-system]
 requires = ["hatchling"]

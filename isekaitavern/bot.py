@@ -18,6 +18,9 @@ class DiscordBot(commands.Bot):
 
         super().__init__(command_prefix=lambda *_: (), intents=intents)
 
+        if app_config.bot.lang not in ("en", "zh-TW"):
+            raise ValueError(f"Invalid language: {app_config.bot.lang}")
+
         self.agent = assistant_core.DiscordAgent(
             api_key=app_config.agent.token,
             base_url=app_config.agent.base_url,
@@ -46,6 +49,14 @@ class DiscordBot(commands.Bot):
             return
 
         should_reply = self.user.mentioned_in(message)
+
+        if not should_reply:
+            bot_member = message.guild.get_member(self.user.id)
+
+            if bot_member:
+                bot_role_ids = {role.id for role in bot_member.roles}
+                should_reply = any(role.id in bot_role_ids for role in message.role_mentions)
+
         if not should_reply and message.reference:
             replied = message.reference.resolved
 
