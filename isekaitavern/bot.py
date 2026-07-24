@@ -1,4 +1,3 @@
-import traceback
 import typing
 
 import assistant_core
@@ -13,7 +12,6 @@ class DiscordBot(commands.Bot):
     def __init__(self) -> None:
         logger.info("Initializing bot")
         intents = discord.Intents.default()
-        intents.members = True
         intents.message_content = True
 
         super().__init__(command_prefix=lambda *_: (), intents=intents)
@@ -24,13 +22,6 @@ class DiscordBot(commands.Bot):
             model=app_config.agent.model,
             language=app_config.bot.lang,
         )
-
-    @typing.override
-    async def setup_hook(self):
-        await self.tree.sync()
-
-    async def on_tree_error(self, _: discord.Interaction, error: discord.app_commands.AppCommandError):
-        logger.error("".join(traceback.format_exception(error)))
 
     @typing.override
     async def on_message(self, message: discord.Message):  # noqa: PLR0912
