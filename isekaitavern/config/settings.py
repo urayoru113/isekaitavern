@@ -48,6 +48,8 @@ class AppConfig(BaseModel):
     bot: Bot
     log: Log
 
+    discord_bot_token: str
+
 
 @lru_cache(1)
 def load_settings() -> AppConfig:
@@ -55,6 +57,8 @@ def load_settings() -> AppConfig:
         config = tomllib.load(f)
 
     secrets = Secrets()  # pyright: ignore[reportCallIssue]
+
+    config["discord_bot_token"] = secrets.discord_bot_token
 
     config["agent"] = {
         "token": secrets.agent_token,
