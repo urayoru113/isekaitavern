@@ -1,8 +1,9 @@
 import tomllib
 from functools import lru_cache
 from pathlib import Path
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,7 +13,16 @@ class Bot(BaseModel):
     lang: str
     api: str
     model: str
+    timezone: ZoneInfo
     allowed_guilds: list[int]
+
+    @field_validator("timezone", mode="before")
+    @classmethod
+    def validate_timezone(cls, value: str) -> ZoneInfo:
+        try:
+            return ZoneInfo(value)
+        except ZoneInfoNotFoundError as e:
+            raise ValueError(f"Invalid timezone: {value}") from e
 
 
 class Log(BaseModel):

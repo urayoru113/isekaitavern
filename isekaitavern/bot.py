@@ -69,6 +69,7 @@ class DiscordBot(commands.Bot):
                     base_url=app_config.agent_base_url,
                     language=app_config.bot.lang,  # type:ignore
                     web_search_endpoint=app_config.search_endpoint,
+                    timezone=app_config.bot.timezone,
                 )
 
             logger.info(f"Message: {message.content}")
@@ -77,7 +78,6 @@ class DiscordBot(commands.Bot):
                 message.guild,
                 message.channel,
                 message.author,
-                message.content,
             )
             if res[0]:
                 await message.reply(res[0])
