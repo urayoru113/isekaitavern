@@ -1,7 +1,6 @@
 import tomllib
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -10,7 +9,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Bot(BaseModel):
     model_config = ConfigDict(frozen=True)
 
-    lang: Literal["en", "zh-TW"]
+    lang: str
+    api: str
+    model: str
     allowed_guilds: list[int]
 
 
@@ -18,14 +19,6 @@ class Log(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     format: str
-
-
-class Agent(BaseModel):
-    model_config = ConfigDict(frozen=True)
-
-    token: str
-    base_url: str
-    model: str
 
 
 class Secrets(BaseSettings):
@@ -38,17 +31,20 @@ class Secrets(BaseSettings):
 
     agent_token: str
     agent_base_url: str
-    agent_model: str
+
+    search_endpoint: str
 
 
 class AppConfig(BaseModel):
     model_config = ConfigDict(frozen=True)
 
-    agent: Agent
     bot: Bot
     log: Log
 
     discord_bot_token: str
+    search_endpoint: str
+    agent_token: str
+    agent_base_url: str
 
 
 @lru_cache(1)
@@ -57,14 +53,7 @@ def load_settings() -> AppConfig:
         config = tomllib.load(f)
 
     secrets = Secrets()  # pyright: ignore[reportCallIssue]
-
-    config["discord_bot_token"] = secrets.discord_bot_token
-
-    config["agent"] = {
-        "token": secrets.agent_token,
-        "base_url": secrets.agent_base_url,
-        "model": secrets.agent_model,
-    }
+    config.update(secrets.model_dump())
 
     return AppConfig.model_validate(config)
 

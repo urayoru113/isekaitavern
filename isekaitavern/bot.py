@@ -16,12 +16,7 @@ class DiscordBot(commands.Bot):
 
         super().__init__(command_prefix=lambda *_: (), intents=intents)
 
-        self.agent = assistant_core.DiscordAgent(
-            api_key=app_config.agent.token,
-            base_url=app_config.agent.base_url,
-            model=app_config.agent.model,
-            language=app_config.bot.lang,
-        )
+        self.agents: dict[int, assistant_core.DiscordAgent] = {}  # [guild_id, agent]
 
     @typing.override
     async def on_message(self, message: discord.Message):  # noqa: PLR0912
@@ -66,8 +61,18 @@ class DiscordBot(commands.Bot):
                 await message.reply(replied_message)
                 return
 
+            if message.guild.id not in self.agents:
+                self.agents[message.guild.id] = assistant_core.DiscordAgent(
+                    api_key=app_config.agent_token,
+                    api=app_config.bot.api,
+                    model=app_config.bot.model,
+                    base_url=app_config.agent_base_url,
+                    language=app_config.bot.lang,  # type:ignore
+                    web_search_endpoint=app_config.search_endpoint,
+                )
+
             logger.info(f"Message: {message.content}")
-            res = await self.agent.run(
+            res = await self.agents[message.guild.id].run(
                 self,
                 message.guild,
                 message.channel,

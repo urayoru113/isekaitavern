@@ -87,16 +87,37 @@ wheels = [
 [[package]]
 name = "assistant-core"
 version = "0.1.0"
-source = { git = "http://forgejo.home.arpa/urayoru113/assistant_core.git#bd1aae105b9eb87db8375dae238500cac3d39c55" }
+source = { editable = "../assistant_core" }
 dependencies = [
     { name = "ddgs" },
     { name = "discord-py" },
+    { name = "httpx" },
     { name = "litellm" },
     { name = "orjson" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "python-dotenv" },
     { name = "trafilatura" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "ddgs", specifier = ">=9.14.4" },
+    { name = "discord-py", specifier = ">=2.7.1" },
+    { name = "httpx", specifier = ">=0.28.1" },
+    { name = "litellm" },
+    { name = "orjson", specifier = ">=3.11.9" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "python-dotenv" },
+    { name = "trafilatura", specifier = ">=2.1.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pre-commit", specifier = ">=4.6.0" },
+    { name = "pyright", specifier = ">=1.1.411" },
+    { name = "ruff", specifier = ">=0.15.21" },
 ]
 
 [[package]]
@@ -586,7 +607,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "assistant-core", git = "http://forgejo.home.arpa/urayoru113/assistant_core.git" },
+    { name = "assistant-core", editable = "../assistant_core" },
     { name = "discord-py" },
 ]
 
