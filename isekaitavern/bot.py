@@ -64,8 +64,8 @@ class DiscordBot(commands.Bot):
             if message.guild.id not in self.agents:
                 self.agents[message.guild.id] = assistant_core.DiscordAgent(
                     api_key=app_config.agent_token,
-                    api=app_config.bot.api,
-                    model=app_config.bot.model,
+                    api=app_config.agent_api,
+                    model=app_config.agent_model,
                     base_url=app_config.agent_base_url,
                     language=app_config.bot.lang,  # type:ignore
                     web_search_endpoint=app_config.search_endpoint,

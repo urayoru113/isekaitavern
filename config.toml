@@ -1,7 +1,5 @@
 [bot]
 lang = "zh-TW"
-api = "deepseek"
-model = "deepseek-v4-flash-free"
 
 allowed_guilds = [
   1253674065097654273, # Isekai tavern

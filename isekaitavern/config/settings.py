@@ -11,8 +11,6 @@ class Bot(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     lang: str
-    api: str
-    model: str
     timezone: ZoneInfo
     allowed_guilds: list[int]
 
@@ -41,6 +39,8 @@ class Secrets(BaseSettings):
 
     agent_token: str
     agent_base_url: str
+    agent_api: str
+    agent_model: str
 
     search_endpoint: str
 
@@ -55,6 +55,8 @@ class AppConfig(BaseModel):
     search_endpoint: str
     agent_token: str
     agent_base_url: str
+    agent_api: str
+    agent_model: str
 
 
 @lru_cache(1)
