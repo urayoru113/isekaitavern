@@ -73,11 +73,6 @@ class DiscordBot(commands.Bot):
                 )
 
             logger.info(f"Message: {message.content}")
-            res = await self.agents[message.guild.id].run(
-                self,
-                message.guild,
-                message.channel,
-                message.author,
-            )
+            res = await self.agents[message.guild.id].run(self, message)
             if res[0]:
                 await message.reply(res[0])
