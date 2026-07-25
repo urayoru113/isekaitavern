@@ -87,7 +87,7 @@ wheels = [
 [[package]]
 name = "assistant-core"
 version = "0.1.0"
-source = { git = "http://forgejo.home.arpa/urayoru113/assistant_core.git#aa7d3f0727fd2b36d9edcdd1cc4fb7929266706b" }
+source = { git = "http://forgejo.home.arpa/urayoru113/assistant_core.git#cef0133182f765c47a0a5559d9ce6413d21da604" }
 dependencies = [
     { name = "ddgs" },
     { name = "discord-py" },
