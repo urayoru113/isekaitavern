@@ -9,3 +9,6 @@ timezone = "Asia/Taipei"
 
 [log]
 format = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+
+# log level: DEBUG | INFO | WARNING | ERROR
+level = "INFO"

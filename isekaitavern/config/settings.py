@@ -1,6 +1,7 @@
 import tomllib
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, ConfigDict, field_validator
@@ -27,6 +28,7 @@ class Log(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     format: str
+    level: Literal["DEBUG", "INFO", "WARNING", "ERROR"]
 
 
 class Secrets(BaseSettings):

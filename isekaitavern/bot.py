@@ -5,7 +5,9 @@ import discord
 import discord.ext.commands as commands
 
 from .config import app_config
-from .utils.logging import logger
+from .utils.log import DEFAULT_LOGGER_NAME, get_logger
+
+logger = get_logger(DEFAULT_LOGGER_NAME)
 
 
 class DiscordBot(commands.Bot):
@@ -67,9 +69,11 @@ class DiscordBot(commands.Bot):
                     api=app_config.agent_api,
                     model=app_config.agent_model,
                     base_url=app_config.agent_base_url,
-                    language=app_config.bot.lang,  # type:ignore
-                    web_search_endpoint=app_config.search_endpoint,
-                    timezone=app_config.bot.timezone,
+                    options=assistant_core.AgentOptions(
+                        language=app_config.bot.lang,  # type:ignore
+                        web_search_endpoint=app_config.search_endpoint,
+                        timezone=app_config.bot.timezone,
+                    ),
                 )
 
             logger.info(f"Message: {message.content}")
